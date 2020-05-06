@@ -1,0 +1,13 @@
+.. _when-directive:
+
+when ディレクティブ
+==================================================
+``when`` ディレクティブを使用してタスクに条件（条件式、条件文）を設定します。
+
+.. note::
+
+   条件式に変数を含む場合、その変数は ``{{`` ``}}`` でくくりません。
+
+.. include:: ./hikaku-enzan-shi.txt
+.. include:: ./ronri-enzan-shi.txt
+.. include:: ./in-enzan-shi.txt

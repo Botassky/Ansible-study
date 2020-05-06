@@ -1,0 +1,284 @@
+.. _inventory-no-sakusei:
+
+インベントリの作成
+==================================================
+
+.. _inventory-no-kihon:
+
+インベントリの基本
+--------------------------------------------------
+``ansible`` コマンドを使用するには Ansible サーバー上に管理対象ホストの一覧を定義したインベントリファイルが必要です。「 :ref:`kensho-yo-host-no-sakusei` 」で作成した管理対象ノードのインベントリです。インベントリファイル名は hosts.yml です。
+
+.. code-block:: none
+
+   ---
+   all:
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_user: vagrant
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+       node2:
+         ansible_host: 192.168.1.162
+         ansible_user: vagrant
+         ansible_ssh_private_key_file: ~/.ssh/node2_key
+       node3:
+         ansible_host: 192.168.1.163
+         ansible_user: vagrant
+         ansible_ssh_private_key_file: ~/.ssh/node3_key
+
+``ansible`` コマンドのインベントリに関係するオプションです。
+
+-i, --inventory, --inventory-file
+   インベントリファイルを指定します。
+--list-hosts
+   インベントリ内で実行対象になる管理対象ホストを確認します。
+
+「ホストパターン」を使用してインベントリ内で実行対象にする管理対象ホストを指定します。もっとも基本的なホストパターンは管理対象ホスト名です。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml --list-hosts
+     hosts (1):
+       node1
+   [vagrant@ansible ~]$
+
+ホストパターンに all を指定するとインベントリ内のすべての管理対象ホストが対象になります。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible all -i hosts.yml --list-hosts
+     hosts (3):
+       node1
+       node3
+       node2
+   [vagrant@ansible ~]$
+
+次のホストパターンも可能です。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1,node3 -i hosts.yml --list-hosts
+     hosts (
+         2):
+       node1
+       node3
+   [vagrant@ansible ~]$
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node* -i hosts.yml --list-hosts
+     hosts (3):
+       node1
+       node3
+       node2
+   [vagrant@ansible ~]$
+
+.. _kanri-taisho-host-no-group-ka:
+
+管理対象ノードのグループ化
+--------------------------------------------------
+インベントリ内の管理対象ホストでグループを作成できます。今回は管理対象ホスト node2 と node3 で web グループを作成しました。
+
+.. code-block:: none
+
+   ---
+   all:
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_user: vagrant
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+     children:
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_user: vagrant
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_user: vagrant
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+
+これはこのようにも書けます。
+
+.. code-block:: none
+
+   ---
+   all:
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_user: vagrant
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+       node2:
+         ansible_host: 192.168.1.162
+         ansible_user: vagrant
+         ansible_ssh_private_key_file: ~/.ssh/node2_key
+       node3:
+           ansible_host: 192.168.1.163
+           ansible_user: vagrant
+           ansible_ssh_private_key_file: ~/.ssh/node3_key
+     children:
+       web:
+         hosts:
+           node2:
+           node3:
+
+グループ名はホストパターンに使用できます。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible web -i hosts.yml --list-hosts
+     hosts (2):
+       node3
+       node2
+   [vagrant@ansible ~]$
+
+グループと管理対象ホスト名の組み合わせも可能です。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible web,node1 -i hosts.yml --list-hosts
+     hosts (3):
+       node3
+       node2
+       node1
+   [vagrant@ansible ~]$
+
+.. _inventory-nai-no-kyotsu-komoku-wo-matomeru:
+
+インベントリ内の共通項目をまとめる
+--------------------------------------------------
+インベントリを記述するとき、共通部分をまとめることができます。今回はすべての管理対象ノードに ansible_user: vagrant が含まれているので、次のように書き直すことができます。
+
+.. code-block:: none
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+       node2:
+         ansible_host: 192.168.1.162
+         ansible_ssh_private_key_file: ~/.ssh/node2_key
+       node3:
+           ansible_host: 192.168.1.163
+           ansible_ssh_private_key_file: ~/.ssh/node3_key
+     children:
+       web:
+         hosts:
+           node2:
+           node3:
+
+.. _inventory-no-check:
+
+インベントリのチェック
+--------------------------------------------------
+``ansible-inventory`` コマンドを使用して、インベントリをチェックできます。主なオプションです。
+
+--graph
+   グループとグループに含まれる管理対象ノードをツリー形式で表示します。
+--list
+   管理対象ノードごとに、どの様に定義されているかをリスト形式に表示します。
+--yaml
+   ``--list`` 形式と併用し、結果を YAML 形式に表示します。
+
+``--graph`` オプションの実行結果です。先頭に @ が付いているのがグループです。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible-inventory -i hosts.yml --graph
+   @all:
+     |--@ungrouped:
+     |  |--node1
+     |--@web:
+     |  |--node2
+     |  |--node3
+   [vagrant@ansible ~]$
+
+``--list`` オプションの実行結果です。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible-inventory -i hosts.yml --list
+   {
+       "_meta": {
+           "hostvars": {
+               "node1": {
+                   "ansible_host": "192.168.1.161",
+                   "ansible_ssh_private_key_file": "~/.ssh/node1_key",
+                   "ansible_user": "vagrant"
+               },
+               "node2": {
+                   "ansible_host": "192.168.1.162",
+                   "ansible_ssh_private_key_file": "~/.ssh/node2_key",
+                   "ansible_user": "vagrant"
+               },
+               "node3": {
+                   "ansible_host": "192.168.1.163",
+                   "ansible_ssh_private_key_file": "~/.ssh/node3_key",
+                   "ansible_user": "vagrant"
+               }
+           }
+       },
+       "all": {
+           "children": [
+               "ungrouped",
+               "web"
+           ]
+       },
+       "ungrouped": {
+           "hosts": [
+               "node1"
+           ]
+       },
+       "web": {
+           "hosts": [
+               "node2",
+               "node3"
+           ]
+       }
+   }
+   [vagrant@ansible ~]$
+
+``--yaml`` オプションの実行結果です。
+
+.. code-block:: none
+
+   all:
+     children:
+       ungrouped:
+         hosts:
+           node1:
+             ansible_host: 192.168.1.161
+             ansible_ssh_private_key_file: ~/.ssh/node1_key
+             ansible_user: vagrant
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+             ansible_user: vagrant
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+             ansible_user: vagrant
+   [vagrant@ansible ~]$
+
+.. _inventory-no-default-group:
+
+インベントリのデフォルトグループ
+--------------------------------------------------
+インベントリは必ず 2 つのデフォルトグループを含みます。
+
+all
+   すべての管理対象ホストが含まれるグループです。
+ungrouped
+   all 以外にどのグループにも属さない管理対象ホストが属すグループです。
+
+すべてのグループの親グループにあたるのが all グループです。明示的に定義するグループは子（ children ）グループになります。

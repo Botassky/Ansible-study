@@ -1,0 +1,245 @@
+.. _jikko-kekka-no-kakunin:
+
+実行結果の確認
+==================================================
+| プレイブックの実行結果を確認します。
+| まず、配置した index.html が表示されるかブラウザーで確認します。
+
+.. image:: ./img/2020-04-20_21h21_31.png
+.. image:: ./img/2020-04-20_21h21_38.png
+
+Powerd by の後に管理対象ホスト名が表示されており、正しく index.html が配置されたことが確認できました。
+
+次に管理対象ホストにログインし、次の状態を確認します。
+
+- Apahce がインストールされていること。
+- httpd サービスが起動していること。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ssh 192.168.1.162 -l vagrant -i ~/.ssh/node2_key 
+   Last login: Mon Apr 20 21:08:54 2020 from 192.168.1.151
+   [vagrant@node2 ~]$ yum list installed httpd
+   Loaded plugins: fastestmirror
+   Determining fastest mirrors
+    * base: ftp.riken.jp
+    * extras: ftp.riken.jp
+    * updates: ftp.riken.jp
+   Installed Packages
+   httpd.x86_64                                                            2.4.6-90.el7.centos                                                             @base
+   [vagrant@node2 ~]$ rpm -qi httpd
+   Name        : httpd
+   Version     : 2.4.6
+   Release     : 90.el7.centos
+   Architecture: x86_64
+   Install Date: Mon 20 Apr 2020 08:57:21 PM JST
+   Group       : System Environment/Daemons
+   Size        : 9817301
+   License     : ASL 2.0
+   Signature   : RSA/SHA256, Fri 23 Aug 2019 06:25:32 AM JST, Key ID 24c6a8a7f4a80eb5
+   Source RPM  : httpd-2.4.6-90.el7.centos.src.rpm
+   Build Date  : Thu 08 Aug 2019 08:43:53 PM JST
+   Build Host  : x86-01.bsys.centos.org
+   Relocations : (not relocatable)
+   Packager    : CentOS BuildSystem <http://bugs.centos.org>
+   Vendor      : CentOS
+   URL         : http://httpd.apache.org/
+   Summary     : Apache HTTP Server
+   Description :
+   The Apache HTTP Server is a powerful, efficient, and extensible
+   web server.
+   [vagrant@node2 ~]$ systemctl status httpd.service
+   ● httpd.service - The Apache HTTP Server
+      Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; vendor preset: disabled)
+      Active: active (running) since Mon 2020-04-20 20:57:24 JST; 38min ago
+        Docs: man:httpd(8)
+              man:apachectl(8)
+    Main PID: 3746 (httpd)
+      Status: "Total requests: 6; Current requests/sec: 0; Current traffic:   0 B/sec"
+      CGroup: /system.slice/httpd.service
+              ├─3746 /usr/sbin/httpd -DFOREGROUND
+              ├─3747 /usr/sbin/httpd -DFOREGROUND
+              ├─3748 /usr/sbin/httpd -DFOREGROUND
+              ├─3749 /usr/sbin/httpd -DFOREGROUND
+              ├─3750 /usr/sbin/httpd -DFOREGROUND
+              ├─3751 /usr/sbin/httpd -DFOREGROUND
+              └─3875 /usr/sbin/httpd -DFOREGROUND
+   [vagrant@node2 ~]$ logout
+   Connection to 192.168.1.162 closed.
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ ssh 192.168.1.163 -l vagrant -i ~/.ssh/node3_key 
+   Last login: Mon Apr 20 21:08:54 2020 from 192.168.1.151
+   [vagrant@node3 ~]$ yum list installed httpd
+   Loaded plugins: fastestmirror
+   Determining fastest mirrors
+    * base: ftp-srv2.kddilabs.jp
+    * extras: ftp-srv2.kddilabs.jp
+    * updates: ftp-srv2.kddilabs.jp
+   Installed Packages
+   httpd.x86_64                                                            2.4.6-90.el7.centos                                                             @base
+   [vagrant@node3 ~]$ rpm -qi httpd
+   Name        : httpd
+   Version     : 2.4.6
+   Release     : 90.el7.centos
+   Architecture: x86_64
+   Install Date: Mon 20 Apr 2020 08:57:21 PM JST
+   Group       : System Environment/Daemons
+   Size        : 9817301
+   License     : ASL 2.0
+   Signature   : RSA/SHA256, Fri 23 Aug 2019 06:25:32 AM JST, Key ID 24c6a8a7f4a80eb5
+   Source RPM  : httpd-2.4.6-90.el7.centos.src.rpm
+   Build Date  : Thu 08 Aug 2019 08:43:53 PM JST
+   Build Host  : x86-01.bsys.centos.org
+   Relocations : (not relocatable)
+   Packager    : CentOS BuildSystem <http://bugs.centos.org>
+   Vendor      : CentOS
+   URL         : http://httpd.apache.org/
+   Summary     : Apache HTTP Server
+   Description :
+   The Apache HTTP Server is a powerful, efficient, and extensible
+   web server.
+   [vagrant@node3 ~]$ systemctl status httpd.service
+   ● httpd.service - The Apache HTTP Server
+      Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; vendor preset: disabled)
+      Active: active (running) since Mon 2020-04-20 20:57:24 JST; 39min ago
+        Docs: man:httpd(8)
+              man:apachectl(8)
+    Main PID: 3742 (httpd)
+      Status: "Total requests: 4; Current requests/sec: 0; Current traffic:   0 B/sec"
+      CGroup: /system.slice/httpd.service
+              ├─3742 /usr/sbin/httpd -DFOREGROUND
+              ├─3743 /usr/sbin/httpd -DFOREGROUND
+              ├─3744 /usr/sbin/httpd -DFOREGROUND
+              ├─3745 /usr/sbin/httpd -DFOREGROUND
+              ├─3746 /usr/sbin/httpd -DFOREGROUND
+              ├─3747 /usr/sbin/httpd -DFOREGROUND
+              └─3873 /usr/sbin/httpd -DFOREGROUND
+   [vagrant@node3 ~]$ logout
+   Connection to 192.168.1.163 closed.
+   [vagrant@ansible ansible-files]$ 
+
+管理対象ホストを再起動します。
+
+.. code-block:: none
+
+   C:\vagrant\ansible-study>vagrant reload node2
+   ==> node2: Attempting graceful shutdown of VM...
+   ==> node2: Checking if box 'centos/7' version '1905.1' is up to date...
+   ==> node2: Clearing any previously set forwarded ports...
+   ==> node2: Fixed port collision for 22 => 2222. Now on port 2201.
+   ==> node2: Clearing any previously set network interfaces...
+   ==> node2: Preparing network interfaces based on configuration...
+       node2: Adapter 1: nat
+       node2: Adapter 2: bridged
+   ==> node2: Forwarding ports...
+       node2: 22 (guest) => 2201 (host) (adapter 1)
+   ==> node2: Running 'pre-boot' VM customizations...
+   ==> node2: Booting VM...
+   ==> node2: Waiting for machine to boot. This may take a few minutes...
+       node2: SSH address: 127.0.0.1:2201
+       node2: SSH username: vagrant
+       node2: SSH auth method: private key
+   ==> node2: Machine booted and ready!
+   [node2] GuestAdditions 6.1.6 running --- OK.
+   ==> node2: Checking for guest additions in VM...
+   ==> node2: Setting hostname...
+   ==> node2: Configuring and enabling network interfaces...
+   ==> node2: Rsyncing folder: /cygdrive/c/vagrant/ansible-study/ => /vagrant
+   ==> node2: Machine already provisioned. Run `vagrant provision` or use the `--provision`
+   ==> node2: flag to force provisioning. Provisioners marked to run always will still run.
+   
+   C:\vagrant\ansible-study>vagrant reload node3
+   ==> node3: Attempting graceful shutdown of VM...
+   ==> node3: Checking if box 'centos/7' version '1905.1' is up to date...
+   ==> node3: Clearing any previously set forwarded ports...
+   ==> node3: Fixed port collision for 22 => 2222. Now on port 2202.
+   ==> node3: Clearing any previously set network interfaces...
+   ==> node3: Preparing network interfaces based on configuration...
+       node3: Adapter 1: nat
+       node3: Adapter 2: bridged
+   ==> node3: Forwarding ports...
+       node3: 22 (guest) => 2202 (host) (adapter 1)
+   ==> node3: Running 'pre-boot' VM customizations...
+   ==> node3: Booting VM...
+   ==> node3: Waiting for machine to boot. This may take a few minutes...
+       node3: SSH address: 127.0.0.1:2202
+       node3: SSH username: vagrant
+       node3: SSH auth method: private key
+   ==> node3: Machine booted and ready!
+   [node3] GuestAdditions 6.1.6 running --- OK.
+   ==> node3: Checking for guest additions in VM...
+   ==> node3: Setting hostname...
+   ==> node3: Configuring and enabling network interfaces...
+   ==> node3: Rsyncing folder: /cygdrive/c/vagrant/ansible-study/ => /vagrant
+   ==> node3: Machine already provisioned. Run `vagrant provision` or use the `--provision`
+   ==> node3: flag to force provisioning. Provisioners marked to run always will still run.
+   
+   C:\vagrant\ansible-study>
+
+同じ手順で動作確認します。
+
+.. image:: img/2020-04-20_21h44_35.png
+.. image:: img/2020-04-20_21h44_43.png
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ssh 192.168.1.162 -l vagrant -i ~/.ssh/node2_key 
+   Last login: Mon Apr 20 21:35:08 2020 from 192.168.1.151
+   [vagrant@node2 ~]$ yum list installed httpd
+   Loaded plugins: fastestmirror
+   Loading mirror speeds from cached hostfile
+    * base: ftp.riken.jp
+    * extras: ftp.riken.jp
+    * updates: ftp.riken.jp
+   Installed Packages
+   httpd.x86_64                                                            2.4.6-90.el7.centos                                                             @base
+   [vagrant@node2 ~]$ systemctl status httpd.service
+   ● httpd.service - The Apache HTTP Server
+      Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; vendor preset: disabled)
+      Active: active (running) since Mon 2020-04-20 21:39:54 JST; 8min ago
+        Docs: man:httpd(8)
+              man:apachectl(8)
+    Main PID: 834 (httpd)
+      Status: "Total requests: 1; Current requests/sec: 0; Current traffic:   0 B/sec"
+      CGroup: /system.slice/httpd.service
+              ├─ 834 /usr/sbin/httpd -DFOREGROUND
+              ├─ 856 /usr/sbin/httpd -DFOREGROUND
+              ├─ 857 /usr/sbin/httpd -DFOREGROUND
+              ├─ 858 /usr/sbin/httpd -DFOREGROUND
+              ├─ 859 /usr/sbin/httpd -DFOREGROUND
+              ├─ 860 /usr/sbin/httpd -DFOREGROUND
+              └─2600 /usr/sbin/httpd -DFOREGROUND
+   [vagrant@node2 ~]$ logout
+   Connection to 192.168.1.162 closed.
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ ssh 192.168.1.163 -l vagrant -i ~/.ssh/node3_key 
+   Last login: Mon Apr 20 21:36:53 2020 from 192.168.1.151
+   [vagrant@node3 ~]$ yum list installed httpd
+   Loaded plugins: fastestmirror
+   Loading mirror speeds from cached hostfile
+    * base: ftp-srv2.kddilabs.jp
+    * extras: ftp-srv2.kddilabs.jp
+    * updates: ftp-srv2.kddilabs.jp
+   Installed Packages
+   httpd.x86_64                                                            2.4.6-90.el7.centos                                                             @base
+   [vagrant@node3 ~]$ systemctl status httpd.service
+   ● httpd.service - The Apache HTTP Server
+      Loaded: loaded (/usr/lib/systemd/system/httpd.service; enabled; vendor preset: disabled)
+      Active: active (running) since Mon 2020-04-20 21:40:54 JST; 7min ago
+        Docs: man:httpd(8)
+              man:apachectl(8)
+    Main PID: 833 (httpd)
+      Status: "Total requests: 1; Current requests/sec: 0; Current traffic:   0 B/sec"
+      CGroup: /system.slice/httpd.service
+              ├─ 833 /usr/sbin/httpd -DFOREGROUND
+              ├─ 857 /usr/sbin/httpd -DFOREGROUND
+              ├─ 858 /usr/sbin/httpd -DFOREGROUND
+              ├─ 859 /usr/sbin/httpd -DFOREGROUND
+              ├─ 861 /usr/sbin/httpd -DFOREGROUND
+              ├─ 862 /usr/sbin/httpd -DFOREGROUND
+              └─2603 /usr/sbin/httpd -DFOREGROUND
+   [vagrant@node3 ~]$ logout
+   Connection to 192.168.1.163 closed.
+   [vagrant@ansible ansible-files]$ 
+
+再起動後もサービスが正常に起動していることを確認できました。

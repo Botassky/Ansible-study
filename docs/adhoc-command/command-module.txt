@@ -1,0 +1,52 @@
+.. _command-module:
+
+コマンドモジュール
+==================================================
+``command`` モジュールを使用して、管理対象ホスト上で Linux コマンドを実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml -m command -a 'id'
+   node1 | CHANGED | rc=0 >>
+   uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   [vagrant@ansible ~]$
+
+``command`` モジュールは実行するコマンドを引数として受け取り、ホストパターンで指定した管理対象ホスト上で実行するモジュールです。ホストパターンに all を指定すると、すべての管理対象ホスト上でコマンドを実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible all -i hosts.yml -m command -a 'id'
+   node2 | CHANGED | rc=0 >>
+   uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   node3 | CHANGED | rc=0 >>
+   uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   node1 | CHANGED | rc=0 >>
+   uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   [vagrant@ansible ~]$
+
+``-o`` オプションを使用すると、実行結果を 1 行で表示します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible all -i hosts.yml -m command -a 'id' -o
+   node3 | CHANGED | rc=0 | (stdout) uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   node2 | CHANGED | rc=0 | (stdout) uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   node1 | CHANGED | rc=0 | (stdout) uid=1000(vagrant) gid=1000(vagrant) groups=1000(vagrant) context=unconfined_u:unconfined_r:unconfined_t:s0-s0:c0.c1023
+   [vagrant@ansible ~]$
+
+オプション付きの Linux コマンドも実行できます。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible all -i hosts.yml -m command -a 'uname -r'
+   node3 | CHANGED | rc=0 >>
+   3.10.0-1062.18.1.el7.x86_64
+   node1 | CHANGED | rc=0 >>
+   3.10.0-1062.18.1.el7.x86_64
+   node2 | CHANGED | rc=0 >>
+   3.10.0-1062.18.1.el7.x86_64
+   [vagrant@ansible ~]$
+
+.. caution::
+
+   ``command`` モジュールでパイプやリダイレクトなどは使用できません。パイプやリダイレクトなどを使用する場合は ``shell`` モジュールを使用します。

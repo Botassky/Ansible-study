@@ -1,0 +1,134 @@
+.. _tanjun-na-loop:
+
+単純なループ
+==================================================
+ループを使用しすると同じタスクを繰り返し実行できます。例えば、複数のユーザーアカウントを作成するとき人数分のタスクの実行が必要です。
+
+.. code-block:: none
+
+   ---
+   - name: 3 ユーザーを追加
+     hosts: node1
+     become: yes
+   
+     tasks:
+     - name: ユーザーの追加1
+       user:
+         name: taro
+         state: present
+     - name: ユーザーの追加2
+       user:
+         name: jiro
+         state: present
+     - name: ユーザーの追加3
+       user:
+         name: hanako
+         state: present
+
+実行ログです。ユーザーを追加するタスク [ユーザーの追加1]、 [ユーザーの追加2]、 [ユーザーの追加3] の 3 つのタスクが実行されました。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml useradd.yml 
+   
+   PLAY [3 ユーザーを追加] ********************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node1]
+   
+   TASK [ユーザーの追加1] *********************************************************************************************************************************************
+   changed: [node1]
+   
+   TASK [ユーザーの追加2] *********************************************************************************************************************************************
+   changed: [node1]
+   
+   TASK [ユーザーの追加3] *********************************************************************************************************************************************
+   changed: [node1]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=4    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+
+これをループを使用して書き直します。
+
+.. code-block:: none
+
+   ---
+   - name: 3 ユーザーを追加
+     hosts: node1
+     become: yes
+   
+     tasks:
+     - name: ユーザーの追加
+       user:
+         name: "{{ item }}" 
+         state: present
+       loop:
+         - taro
+         - jiro
+         - hanako
+
+ループのルールです。
+
+- ``loop`` ディレクティブを使用してループを定義します。
+- ``loop`` ディレクティブを使用すると変数 item が用意されます。変数 item の定義は不要です。
+- ``loop`` ディレクティブに列挙した値を順番に 1 つ取り出し、変数 item にセットしてタスクを実行します。この動作を ``loop`` ディレクティブに列挙した値の数だけ繰り返します。
+
+実行ログです。タスク [ユーザーの追加] の実行結果内に changed が 3 行出力されました。これは、[ユーザーの追加] を 3 回繰り返し実行したということです。実行ログではループのたびに変数 item に設定された値を確認できます。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml useradd.yml 
+   
+   PLAY [3 ユーザーを追加] ********************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node1]
+   
+   TASK [ユーザーの追加] **********************************************************************************************************************************************
+   changed: [node1] => (item=taro)
+   changed: [node1] => (item=jiro)
+   changed: [node1] => (item=hanako)
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+アドホックコマンドで管理対象ホスト node1 の :file:`/etc/passwd` ファイルの内容を確認した結果です。 ``loop`` ディレクティブに列挙した値のアカウントが作成されました。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m command -a 'cat /etc/passwd'
+   node1 | CHANGED | rc=0 >>
+   root:x:0:0:root:/root:/bin/bash
+   bin:x:1:1:bin:/bin:/sbin/nologin
+   daemon:x:2:2:daemon:/sbin:/sbin/nologin
+   adm:x:3:4:adm:/var/adm:/sbin/nologin
+   lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+   sync:x:5:0:sync:/sbin:/bin/sync
+   shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+   halt:x:7:0:halt:/sbin:/sbin/halt
+   mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+   operator:x:11:0:operator:/root:/sbin/nologin
+   games:x:12:100:games:/usr/games:/sbin/nologin
+   ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+   nobody:x:99:99:Nobody:/:/sbin/nologin
+   systemd-network:x:192:192:systemd Network Management:/:/sbin/nologin
+   dbus:x:81:81:System message bus:/:/sbin/nologin
+   polkitd:x:999:998:User for polkitd:/:/sbin/nologin
+   rpc:x:32:32:Rpcbind Daemon:/var/lib/rpcbind:/sbin/nologin
+   rpcuser:x:29:29:RPC Service User:/var/lib/nfs:/sbin/nologin
+   nfsnobody:x:65534:65534:Anonymous NFS User:/var/lib/nfs:/sbin/nologin
+   sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin
+   postfix:x:89:89::/var/spool/postfix:/sbin/nologin
+   chrony:x:998:995::/var/lib/chrony:/sbin/nologin
+   vagrant:x:1000:1000:vagrant:/home/vagrant:/bin/bash
+   vboxadd:x:997:1::/var/run/vboxadd:/bin/false
+   tss:x:59:59:Account used by the trousers package to sandbox the tcsd daemon:/dev/null:/sbin/nologin
+   taro:x:1001:1001::/home/taro:/bin/bash
+   jiro:x:1002:1002::/home/jiro:/bin/bash
+   hanako:x:1003:1003::/home/hanako:/bin/bash
+   [vagrant@ansible ansible-files]$ 

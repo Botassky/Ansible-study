@@ -1,0 +1,175 @@
+.. _playbook-no-sakusei:
+
+プレイブックの作成
+==================================================
+インベントリ内の web グループに含まれる管理対象ホスト上に次の 3 ステップで Apache Web Server を構築するプレイを作成します。
+
+#. Apache （ httpd パッケージ）のインストール
+#. httpd サービスの起動
+#. index.html の配置
+
+.. _playbook-no-sakusei-junbi:
+
+作成準備
+--------------------------------------------------
+プレイを作成する準備として、ホームディレクトリ内に各ファイルの格納用に :file:`ansible-files` ディレクトリを作成します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ cd
+   [vagrant@ansible ~]$ pwd
+   /home/vagrant
+   [vagrant@ansible ~]$ mkdir ./ansible-files/
+   [vagrant@ansible ~]$ cd ./ansible-files/
+   [vagrant@ansible ansible-files]$ pwd
+   /home/vagrant/ansible-files
+   [vagrant@ansible ansible-files]$ 
+
+次に、「 :ref:`adhoc-command` 」で作成したインベントリファイルを :file:`ansible-files` ディレクトリに移動します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ mv ../hosts.yml ./
+   [vagrant@ansible ansible-files]$ ls -l
+   total 4
+   -rw-rw-r--. 1 vagrant vagrant 414 Apr 19 15:30 hosts.yml
+   [vagrant@ansible ansible-files]$
+
+.. _playbook-no-sakusei-targets-section:
+
+targets セクション
+--------------------------------------------------
+vi コマンドなどで :file:`apache.yml` ファイルを作成し、プレイの定義部分を記述します。この定義部分を targets セクションと呼びます。
+
+.. code-block:: none
+   :linenos:
+
+   ---
+   - name: Apache server installed
+     hosts: web
+     become: yes
+
+| 1 行目
+| ・プレイの開始です。
+| 2 行目
+| ・このプレイの名前を Apache server installed に設定しました。 
+| 3 行目
+| ・管理対象をホストパターンで指定します。
+| ・今回は管理対象に web グループを指定しました。
+| 4 行目
+| ・プレイ全体を権限昇格して実行することを宣言しました。
+
+.. _playbook-no-sakusei-tasks-section:
+
+tasks セクション
+--------------------------------------------------
+次にタスクを定義します。タスクを定義する部分を tasks セクションと呼びます。 tasks セクションはキーワード ``tasks:`` から始まります。
+
+まず、Apache のインストール部分です
+
+.. code-block:: none
+   :linenos:
+
+     tasks:
+     - name: latest Apache version installed
+       yum:
+         name: httpd
+         state: latest
+
+どのモジュールも同じような形式で定義します。
+
+| 1 行目
+| ・ tasks セクションの開始です。
+| 2 行目
+| ・ このタスクの名前を latest Apache version installed に設定しました。
+| 3 行目
+| ・ タスクで使用するモジュールの宣言です。
+| ・ Apache のパッケージをインストールするので ``yum`` モジュールを使用します。
+| 4 ～ 5 行目
+| ・ モジュールの引数を定義します。
+| ・ 今回は yum モジュールの引数を ``name`` オプションと ``state`` オプションで渡しています。
+
+``yum`` モジュールのオプションです。
+
+name:
+   - インストールや削除するパッケージ名を指定します。
+state:
+   - present：指定したパッケージをインストールした状態にします。
+   - latest ：指定したパッケージの最新版をインストールした状態にします。
+   - absent ：指定したパッケージを削除した状態にします。
+
+次に httpd サービスを起動します。
+
+.. code-block:: none
+   :linenos:
+
+     - name: Apache enabled and running
+       systemd:
+         name: httpd.service
+         state: started
+         enabled: yes
+
+CentOS7/RHEL7 からサービスの管理用に systemd が導入されました（従来の service も使用できる場合があります）。 Ansible でもそれに対応して ``systemd`` モジュールが追加されたので、それを使用します。書き方は Apache のインストールと同じ形式です。
+
+systemd モジュールのオプションの説明です。
+
+name:
+   - 起動や停止などするサービス名を指定します。
+state:
+   - started　：サービスを開始した状態にします。
+   - stopped　：サービスを停止した状態にします。
+   - restarted：サービスの状態に関係なく、サービスを再起動した状態にします。
+   - reloaded ：サービスの状態に菅家なく、サービスをリロードした状態にします。
+enabled:
+   - ``yes`` を指定すると、ホストの起動時に指定したサービスを自動起動します。
+
+最後に表示する Web ページを管理対象にコピーします。
+
+.. code-block:: none
+   :linenos:
+
+     - name: copy index.html
+       template:
+         src: ~/ansible-files/index.j2
+         dest: /var/www/html/index.html
+
+ファイルのコピーには ``copy`` モジュールと ``template`` モジュールが使用できます。今回は ``template`` モジュールを使用します。
+
+``template`` モジュールのオプションの説明です。
+
+src:
+   - コピー元のパス（ファイル)を指定します
+   - コピー元のファイルには変数を埋め込むことができます。
+dest:
+   - コピー先のパス（ファイル）を指定します。
+
+コピー元の ``index.j2`` ファイルの内容です。
+
+.. code-block:: none
+
+   Hello, Ansible world.<br>
+   Powerd by {{ inventory_hostname }}<br>
+
+プレイ全体です。
+
+.. code-block:: none
+
+   ---
+   - name: Apache server installed
+     hosts: web
+     become: yes
+   
+     tasks:
+     - name: latest Apache version installed
+       yum:
+         name: httpd
+         state: latest
+     - name: Apache enabled and running
+       systemd:
+         name: httpd.service
+         state: started
+         enabled: yes
+     - name: copy index.html
+       template:
+         src: ~/ansible-files/index.j2
+         dest: /var/www/html/index.html

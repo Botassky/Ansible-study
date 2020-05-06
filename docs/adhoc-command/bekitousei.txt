@@ -1,0 +1,31 @@
+.. _bekitousei:
+
+べき等性
+==================================================
+「 :ref:`kengen-shokaku` 」で実行した :file:`/etc/motd` ファイルを変更するアドホックコマンドをもう一度実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd' -b
+   node1 | SUCCESS => {
+       "ansible_facts": {
+           "discovered_interpreter_python": "/usr/bin/python"
+       },
+       "changed": false,
+       "checksum": "4458b979ede3c332f8f2128385df4ba305e58c27",
+       "dest": "/etc/motd",
+       "gid": 0,
+       "group": "root",
+       "mode": "0644",
+       "owner": "root",
+       "path": "/etc/motd",
+       "secontext": "system_u:object_r:etc_t:s0",
+       "size": 19,
+       "state": "file",
+       "uid": 0
+   }
+   [vagrant@ansible ~]$
+
+実行は成功しました。出力メッセージ内に "changed": false と表示されています。これは「アドホックコマンド（タスク）の実行は成功したが、管理対象ホストの状態は変更されなかった」ことを意味します。具体的には、Ansible が :file:`/etc/motd` ファイルの内容が変更したい（変更後の）内容と同じ状態だったので、ファイルの内容を変更しなかったという
+ことです。このように Ansible は管理対象ホストの状態をチェックし、変更が必要なら変更し、変更が不要なら変更しません。その結果、何度アドホックコマンドを実行しても、実行後の管理対象ホストの状態は常に同じになります。このように、何度コマンドを実行しても、実行後が常に同じ状態になることを「 **『べき等性（冪等性）』を保っている** 」と言いま
+す。これは :ref:`kosei-kanri-tool` の大きな特徴であり、後述の :ref:`playbook` を使用した場合も当てはまります。

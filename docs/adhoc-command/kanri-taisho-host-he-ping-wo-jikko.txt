@@ -1,0 +1,23 @@
+.. _kanri-taisho-host-he-ping-wo-jikko:
+
+管理対象ホストへ ping モジュールを実行
+==================================================
+Ansible の ``ping`` モジュールを使用して管理対象ホストへ ping を実行します。 ``ping`` モジュールはネットワークで疎通確認に使用する ping コマンドと動作が異なります。管理対象ホストへ ping モジュールの実行が成功した場合、 Ansible がその管理対象ホスト上でコマンドを正しく実行できることを確認できたことになります。
+
+.. tip::
+
+   モジュールは特定の処理をするためのプログラムです。 ``ansible`` コマンドは ``-a`` オプションでモジュールに引数を渡します。
+
+``ansible`` コマンドは ``-m`` オプションで実行するモジュールを指定します。 
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml -m ping
+   node1 | SUCCESS => {
+       "ansible_facts": {
+           "discovered_interpreter_python": "/usr/bin/python"
+       },
+       "changed": false,
+       "ping": "pong"
+   }
+   [vagrant@ansible ~]$

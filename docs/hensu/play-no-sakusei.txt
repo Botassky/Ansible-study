@@ -1,0 +1,33 @@
+.. _play-no-sakusei:
+
+プレイの作成
+--------------------------------------------------
+管理対象ホストにコピーするファイルを 2 つ作成します。
+
+:file:`prod_index.html` ファイルの内容です。
+
+.. code-block:: none
+
+   注意してください。これは製品版の Web サーバーです。<br>
+
+:file:`dev_index.html` ファイルの内容です。
+
+.. code-block:: none
+
+   これは開発中の Web server です。<br>
+
+変数 stage に設定した値により、管理対象ホストにコピーするファイルを変更するプレイです。9 行目の管理対象ホストにコピーするファイルを指定する部分で変数を使用しています。
+
+.. code-block:: none
+   :linenos:
+
+   ---
+   - name: Apache server installed
+     hosts: web
+     become: yes
+   
+     tasks:
+     - name: copy index.html
+       copy:
+         src: ~/ansible-files/{{ stage }}_index.html
+         dest: /var/www/html/index.html

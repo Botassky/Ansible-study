@@ -1,0 +1,39 @@
+.. _virtual-host-you-settei-file-no-sakusei:
+
+バーチャルホスト用設定ファイルの作成
+--------------------------------------------------
+:file:`templates` ディレクトリ内にバーチャルホスト用の設定ファイルを作成します。
+
+ファイル作成後の状態です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ tree
+   .
+   ├── hosts.yml
+   └── roles
+       └── apache
+           ├── handlers
+           ├── tasks
+           └── templates
+               ├── default-index.j2
+               ├── vhost.j2
+               └── virtual-index.j2
+   
+   5 directories, 4 files
+   [vagrant@ansible ansible-files]$ 
+
+roles/apache/templates/vhost.j2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: none
+
+   <VirtualHost *:80>
+     DocumentRoot /var/www/html
+     ServerName {{ ansible_facts['hostname'] }}
+   </VirtualHost>
+   
+   <VirtualHost *:80>
+     DocumentRoot /var/www/vhost_html 
+     ServerName virtual-{{ ansible_facts['hostname'] }}
+   </VirtualHost>
+

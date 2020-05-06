@@ -1,0 +1,32 @@
+.. _play-no-jikko:
+
+プレイの実行
+--------------------------------------------------
+作成したプレイを実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml apache.yml 
+   
+   PLAY [Apache server installed] ******************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [copy index.html] **************************************************************************************************************************************
+   changed: [node2]
+   changed: [node3]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+変数 stage の値にもとづき所定のファイルが正しくコピーされたかブラウザーで確認します。
+
+.. image:: img/2020-04-25_21h59_16.png
+.. image:: img/2020-04-25_21h59_25.png
+
+変数 stage の値にもとづき、管理対象ホスト node2 に :file:`dev_index.html` ファイルが、 node3 に :file:`prod_index.html` ファイルが正しくコピーされました。

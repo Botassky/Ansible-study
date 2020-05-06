@@ -1,0 +1,95 @@
+.. _or-enzan-shi:
+
+or 演算子
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+CentOS か Debian の管理対象ホストをシャットダウンするプレイです。
+
+.. code-block:: none
+
+   - name: 特定の OS の管理対象ホストをシャットダウンする
+     hosts: all
+     
+     tasks:
+     - name: CentOS か Debian だけシャットダウンする
+       command: /sbin/shutdown -t 15
+       become: yes
+       when: ansible_facts['distribution'] == "CentOS" or ansible_facts['distribution'] == "Debian"
+
+``when`` ディレクティブに指定した条件は次のように書き直せます。
+
+.. code-block:: none
+
+   - name: 特定の OS の管理対象ホストをシャットダウンする
+     hosts: all
+     
+     tasks:
+     - name: CentOS か Debian だけシャットダウンする
+       command: /sbin/shutdown -t 15
+       become: yes
+       when: ansible_facts['distribution'] == "CentOS" 
+          or ansible_facts['distribution'] == "Debian"
+
+実行前の管理対象ホストの状態です。
+
+.. code-block:: none
+
+   C:\vagrant\ansible-study2>vagrant status
+   Current machine states:
+   
+   centos7                   running (virtualbox)
+   centos8                   running (virtualbox)
+   debian10                  running (virtualbox)
+   ubuntu18                  running (virtualbox)
+   
+   This environment represents multiple VMs. The VMs are all listed
+   above with their current state. For more information about a specific
+   VM, run `vagrant status NAME`.
+   
+   C:\vagrant\ansible-study2>
+
+実行ログです。 CentOS と Debian の管理対象ホストが ``when`` ディレクティブに指定した条件に合致したので changed です。Ubuntu の管理対象ホストは条件に合致せずタスクの実行をスキップしたので skipping です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts2.yml shutdown.yml 
+   
+   PLAY [特定の OS の管理対象ホストをシャットダウンする] ****************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [debian10]
+   ok: [centos7]
+   ok: [ubuntu18]
+   ok: [centos8]
+   
+   TASK [CentOS か Debian だけシャットダウンする] **************************************************************************************************************************
+   skipping: [ubuntu18]
+   changed: [debian10]
+   [WARNING]: Module invocation had junk after the JSON data:   Broadcast message from root@centos7 (Mon 2020-05-04 01:00:44 UTC):    The system is going down for power-off at Mon 2020-05-04 01:01:44 UTC!
+   changed: [centos7]
+   changed: [centos8]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   centos7                    : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   centos8                    : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   debian10                   : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   ubuntu18                   : ok=1    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+実行後の管理対象ホストの状態です。実行ログと同じ結果です。
+
+.. code-block:: none
+
+   C:\vagrant\ansible-study2>vagrant status
+   Current machine states:
+   
+   centos7                   poweroff (virtualbox)
+   centos8                   poweroff (virtualbox)
+   debian10                  poweroff (virtualbox)
+   ubuntu18                  running (virtualbox)
+   
+   This environment represents multiple VMs. The VMs are all listed
+   above with their current state. For more information about a specific
+   VM, run `vagrant status NAME`.
+   
+   C:\vagrant\ansible-study2>

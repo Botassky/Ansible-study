@@ -1,0 +1,64 @@
+$script1 = <<-'SCRIPT'
+timedatectl set-timezone Asia/Tokyo
+yum -y remove open-vm-tools
+yum -y update
+SCRIPT
+
+$script2 = <<-'SCRIPT'
+yum -y install epel-release
+yum -y install vim-enhanced
+yum -y install ansible
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "centos/7"
+  config.vm.provider "virtualbox" do |vb|
+    vb.memory = "4096"
+    vb.cpus = 1
+    vb.customize [
+      "modifyvm", :id,
+      "--ioapic", "on",
+      "--graphicscontroller", "vmsvga"
+    ]
+  end
+
+  config.vm.define :ansible do |ansible|
+    ansible.vm.network "public_network", mac: "000d58000151", ip: "192.168.1.151"
+    ansible.vm.hostname = "ansible"
+    ansible.vm.provider "virtualbox" do |vb|
+      vb.name = "Ansible"
+      vb.memory = "8192"
+      vb.cpus = 2
+    end
+    ansible.vm.provision "shell", inline: $script1
+    ansible.vm.provision "shell", inline: $script2
+  end
+
+  config.vm.define :node1 do |node1|
+    node1.vm.network "public_network", mac: "000d58000161", ip: "192.168.1.161"
+    node1.vm.hostname = "node1"
+    node1.vm.provider "virtualbox" do |vb|
+      vb.name = "node1"
+    end
+    node1.vm.provision "shell", inline: $script1
+  end
+
+  config.vm.define :node2 do |node2|
+    node2.vm.network "public_network", mac: "000d58000163", ip: "192.168.1.162"
+    node2.vm.hostname = "node2"
+    node2.vm.provider "virtualbox" do |vb|
+      vb.name = "node2"
+    end
+    node2.vm.provision "shell", inline: $script1
+  end
+
+  config.vm.define :node3 do |node3|
+    node3.vm.network "public_network", mac: "000d58000163", ip: "192.168.1.163"
+    node3.vm.hostname = "node3"
+    node3.vm.provider "virtualbox" do |vb|
+      vb.name = "node3"
+    end
+    node3.vm.provision "shell", inline: $script1
+  end
+
+end

@@ -1,0 +1,25 @@
+.. _inventory-file:
+
+インベントリファイル
+--------------------------------------------------
+インベントリファイル hosts.yml の内容です。
+
+.. code-block:: none
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+     children:
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key

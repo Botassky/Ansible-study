@@ -1,0 +1,15 @@
+.. _jizen-ni-install-shiteoku-tool:
+
+事前にインストールしておくツール
+==================================================
+検証のため事前に次のツールをインストールします。
+
+- `Oracle VirtualBox <https://www.virtualbox.org/>`_
+- `Vagrant <https://www.vagrantup.com/>`_
+- `Microsoft Vusual Studio Code (VS Code) <https://azure.microsoft.com/ja-jp/products/visual-studio-code/>`_
+- `Tera Term <http://ttssh2.osdn.jp/>`_
+- `WinSCP <https://winscp.net/eng/docs/lang:jp>`_
+
+.. caution::
+
+   32 bit 版と 64 bit 版があるときは 64bit 版をインストールします。

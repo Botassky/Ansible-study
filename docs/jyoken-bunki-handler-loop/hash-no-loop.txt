@@ -1,0 +1,192 @@
+.. _hash-no-loop:
+
+ハッシュのループ
+==================================================
+ハッシュもループで扱えます。「 :ref:`tanjun-na-loop` 」はユーザー名だけでしたが、今回はパスワードも併せてハッシュで定義します。
+
+.. code-block:: none
+
+   - username: taro
+     password: taropass
+   - username: jiro
+     password: jiropass
+   - username: hanako
+     password: hanakopass
+
+上記のデータがどの様に変数 item に設定されるか確認します。
+
+.. code-block:: none
+
+   ---
+   - name: 3 ユーザーを追加
+     hosts: node1
+     become: yes
+   
+     tasks:
+     - name: 変数 item の確認
+       debug:
+         var: item
+       loop:
+         - username: taro
+           password: taropass
+         - username: jiro
+           password: jiropass
+         - username: hanako
+           password: hanakopass
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml useradd.yml 
+   
+   PLAY [3 ユーザーを追加] ********************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node1]
+   
+   TASK [変数 item の確認] ******************************************************************************************************************************************
+   ok: [node1] => (item={u'username': u'taro', u'password': u'taropass'}) => {
+       "ansible_loop_var": "item", 
+       "item": {
+           "password": "taropass", 
+           "username": "taro"
+       }
+   }
+   ok: [node1] => (item={u'username': u'jiro', u'password': u'jiropass'}) => {
+       "ansible_loop_var": "item", 
+       "item": {
+           "password": "jiropass", 
+           "username": "jiro"
+       }
+   }
+   ok: [node1] => (item={u'username': u'hanako', u'password': u'hanakopass'}) => {
+       "ansible_loop_var": "item", 
+       "item": {
+           "password": "hanakopass", 
+           "username": "hanako"
+       }
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$
+
+変数 item の中に username と password が含まれるため、次のように参照します。
+
+:command:`item['キー名']`
+
+具体的には各値に次のように参照します。
+
+| :command:`item['username']`
+| :command:`item['password']`
+
+ユーザーアカウントを作成するプレイです。
+
+.. code-block:: none
+
+   ---
+   - name: 3 ユーザーを追加
+     hosts: node1
+     become: yes
+   
+     tasks:
+     - name: ユーザーを追加
+       user:
+         name: "{{ item['username'] }}"
+         password: "{{ item['password'] | password_hash('sha512') }}"
+         state: present
+       loop:
+         - username: taro
+           password: taropass
+         - username: jiro
+           password: jiropass
+         - username: hanako
+           password: hanakopass
+
+実行ログです。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml useradd.yml 
+   
+   PLAY [3 ユーザーを追加] ********************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node1]
+   
+   TASK [ユーザーを追加] **********************************************************************************************************************************************
+   changed: [node1] => (item={u'username': u'taro', u'password': u'taropass'})
+   changed: [node1] => (item={u'username': u'jiro', u'password': u'jiropass'})
+   changed: [node1] => (item={u'username': u'hanako', u'password': u'hanakopass'})
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+アドホックコマンドで管理対象ホスト node1 の :file:`/etc/passwd` ファイルと :file:`/etc/shadow` ファイルの内容を確認した結果です。 ``loop`` ディレクティブに列挙したアカウント情報が追加されました。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m command -a 'cat /etc/passwd'
+   node1 | CHANGED | rc=0 >>
+   root:x:0:0:root:/root:/bin/bash
+   bin:x:1:1:bin:/bin:/sbin/nologin
+   daemon:x:2:2:daemon:/sbin:/sbin/nologin
+   adm:x:3:4:adm:/var/adm:/sbin/nologin
+   lp:x:4:7:lp:/var/spool/lpd:/sbin/nologin
+   sync:x:5:0:sync:/sbin:/bin/sync
+   shutdown:x:6:0:shutdown:/sbin:/sbin/shutdown
+   halt:x:7:0:halt:/sbin:/sbin/halt
+   mail:x:8:12:mail:/var/spool/mail:/sbin/nologin
+   operator:x:11:0:operator:/root:/sbin/nologin
+   games:x:12:100:games:/usr/games:/sbin/nologin
+   ftp:x:14:50:FTP User:/var/ftp:/sbin/nologin
+   nobody:x:99:99:Nobody:/:/sbin/nologin
+   systemd-network:x:192:192:systemd Network Management:/:/sbin/nologin
+   dbus:x:81:81:System message bus:/:/sbin/nologin
+   polkitd:x:999:998:User for polkitd:/:/sbin/nologin
+   rpc:x:32:32:Rpcbind Daemon:/var/lib/rpcbind:/sbin/nologin
+   rpcuser:x:29:29:RPC Service User:/var/lib/nfs:/sbin/nologin
+   nfsnobody:x:65534:65534:Anonymous NFS User:/var/lib/nfs:/sbin/nologin
+   sshd:x:74:74:Privilege-separated SSH:/var/empty/sshd:/sbin/nologin
+   postfix:x:89:89::/var/spool/postfix:/sbin/nologin
+   chrony:x:998:995::/var/lib/chrony:/sbin/nologin
+   vagrant:x:1000:1000:vagrant:/home/vagrant:/bin/bash
+   vboxadd:x:997:1::/var/run/vboxadd:/bin/false
+   tss:x:59:59:Account used by the trousers package to sandbox the tcsd daemon:/dev/null:/sbin/nologin
+   taro:x:1001:1001::/home/taro:/bin/bash
+   jiro:x:1002:1002::/home/jiro:/bin/bash
+   hanako:x:1003:1003::/home/hanako:/bin/bash
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m command -a 'cat /etc/shadow' -b
+   node1 | CHANGED | rc=0 >>
+   root:$1$QDyPlph/$oaAX/xNRf3aiW3l27NIUA/::0:99999:7:::
+   bin:*:17834:0:99999:7:::
+   daemon:*:17834:0:99999:7:::
+   adm:*:17834:0:99999:7:::
+   lp:*:17834:0:99999:7:::
+   sync:*:17834:0:99999:7:::
+   shutdown:*:17834:0:99999:7:::
+   halt:*:17834:0:99999:7:::
+   mail:*:17834:0:99999:7:::
+   operator:*:17834:0:99999:7:::
+   games:*:17834:0:99999:7:::
+   ftp:*:17834:0:99999:7:::
+   nobody:*:17834:0:99999:7:::
+   systemd-network:!!:18048::::::
+   dbus:!!:18048::::::
+   polkitd:!!:18048::::::
+   rpc:!!:18048:0:99999:7:::
+   rpcuser:!!:18048::::::
+   nfsnobody:!!:18048::::::
+   sshd:!!:18048::::::
+   postfix:!!:18048::::::
+   chrony:!!:18048::::::
+   vagrant:$1$C93uBBDg$pqzqtS3a9llsERlv..YKs1::0:99999:7:::
+   vboxadd:!!:18387::::::
+   tss:!!:18387::::::
+   taro:$6$En5PNzmKmeHQDU26$q0NAYS182q6NHjCb73sBL61x9565Q0j3xjhEUqX71XRI93j/ZCJ1LJu1GyH2TNg3CzODlB6Xc5Wqg9DvbNHDu/:18387:0:99999:7:::
+   jiro:$6$848sd124X0fBVWfj$YDAvHmp7KYYtq0IhTRFYAy3cp/1G/801DGs.T5JN.MdZfpPjNLbhMYZ5qMRQuQE/38tRbIbRSWiRMEoV58jQE.:18387:0:99999:7:::
+   hanako:$6$dcLjKEy0Yinxpbo8$iznnNfrkvhr92c9mencHIG07iuONY2BgGnqwJnnE/s8fhb1vDITXqv6TDOHlAIiDv50ftm/3bcqMJbpR8E.NM0:18387:0:99999:7:::
+   [vagrant@ansible ansible-files]$ 

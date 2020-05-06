@@ -1,0 +1,20 @@
+.. _role-no-sakusei:
+
+ロールの作成
+==================================================
+web グループの管理対象ホスト用に次のプレイを作成します。
+
+#. Apache の最新版をインストールする。すでに Apache がインストール済みのときは最新版に更新する。
+#. ファイアウォールの http ポートを開放する。
+#. Apache の最新版をインストールまたは更新したときは Apache のサービスを再起動する。
+#. バーチャルホスト用の設定ファイルをコピーする。
+#. バーチャルホストのコンテンツ用のディレクトリ :file:`/var/www/vhost_html` を作成する。
+#. 元ドメイン用の :file:`index.html` ファイルをコピーする。
+#. バーチャルホスト用の :file:`index.html` ファイルをコピーする。
+
+.. include:: ./inventory-file.txt
+.. include:: ./hitsuyo-na-directory-no-sakusei.txt
+.. include:: ./template-file-no-sakusei.txt
+.. include:: ./virtual-host-you-settei-file-no-sakusei.txt
+.. include:: ./task-no-sakusei.txt
+.. include:: ./jikko-kakunin.txt

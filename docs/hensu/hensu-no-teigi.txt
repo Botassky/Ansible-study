@@ -1,0 +1,62 @@
+.. _hensu-no-teigi:
+
+変数の定義
+--------------------------------------------------
+インベントリの内容です。
+
+.. code-block:: none
+   :linenos:
+   :emphasize-lines: 15, 18-19
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+       node2:
+         ansible_host: 192.168.1.162
+         ansible_ssh_private_key_file: ~/.ssh/node2_key
+       node3:
+           ansible_host: 192.168.1.163
+           ansible_ssh_private_key_file: ~/.ssh/node3_key
+           stage: prod
+     children:
+       web:
+         vars:
+           stage: dev
+         hosts:
+           node2:
+           node3:
+
+変数 satege を15 行目で管理対象ホスト node3 に、18-19 行目で web グループ全体に適用するよう定義しています。変数が管理対象ホストにどの様に影響するのか ``ansible-inventory`` コマンドでインベントリの内容を確認します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-inventory -i hosts.yml --list --yaml
+   all:
+     children:
+       ungrouped:
+         hosts:
+           node1:
+             ansible_host: 192.168.1.161
+             ansible_ssh_private_key_file: ~/.ssh/node1_key
+             ansible_user: vagrant
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+             ansible_user: vagrant
+             stage: dev
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+             ansible_user: vagrant
+             stage: prod
+   [vagrant@ansible ansible-files]$ 
+
+| 同じ変数名の変数を定義した場合、定義した場所で優先順位が決定します。
+| web グループ内の管理対象ホストに影響する vars の宣言より個別の管理対象ホストに定義した変数のほうが優先順位が高いため、vars の宣言内で定義した変数の値が管理対象ホストに定義した変数の値で上書きされます。

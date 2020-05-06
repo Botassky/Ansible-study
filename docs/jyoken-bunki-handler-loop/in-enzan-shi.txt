@@ -1,0 +1,18 @@
+.. _in-enzan-shi:
+
+in 演算子
+--------------------------------------------------
+:ref:`or-enzan-shi` で使用した CentOS か Debian の管理対象ホストをシャットダウンするプレイを in 演算子で書き直した結果です。
+
+.. code-block:: none
+
+   - name: 特定の OS の管理対象ホストをシャットダウンする
+     hosts: all
+     
+     tasks:
+     - name: CentOS か Debian をシャットダウンする
+       command: /sbin/shutdown -t 15
+       become: yes
+       when: ansible_facts['distribution'] in ["CentOS", "Debian"]
+
+in 演算子は in の左側に書いた値が ``[`` ``]`` の中に書いた値と同じものがあるかを判断します（ not in の場合はないかを判断します）。今回のような使い方の場合、 or 演算子を使用するより in 演算子を使用した方が条件の意味がわかりやすくなります。

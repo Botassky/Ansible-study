@@ -1,0 +1,20 @@
+.. _kankyo-ni-kansuru-hosoku:
+
+環境に関する補足
+==================================================
+- Ansible はコマンドラインで操作することが多いです。必要に応じて、ソースコードやコマンドをコピー & ペーストしてください。
+- 「 :ref:`kensho-yo-host-no-sakusei` 」で Ansible サーバーに vim をインストールしています。 vim の環境設定はホームディレクトリ内の :file:`.vimrc` ファイルで行います。下記は :file:`.vimrc` ファイルの一例です。
+
+.. code-block:: none
+
+   set noswapfile
+   set number
+   set cursorline
+   set showmatch
+   set expandtab
+   set softtabstop=2
+   set shiftwidth=2
+   set autoindent
+   set showcmd
+   set visualbell
+   syntax enable

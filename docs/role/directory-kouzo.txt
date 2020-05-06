@@ -1,0 +1,93 @@
+.. _directory-kouzo:
+
+ディレクトリ構造
+==================================================
+ロールは :file:`roles/` ディレクトリ内に配置します。以下は `Ansible の Best Practices で提示されているディレクトリレイアウト <https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#directory-layout>`_ です。網掛けがロールに関する部分です。
+
+.. code-block:: none
+   :emphasize-lines: 19-42
+
+   production                # inventory file for production servers
+   staging                   # inventory file for staging environment
+   
+   group_vars/
+      group1.yml             # here we assign variables to particular groups
+      group2.yml
+   host_vars/
+      hostname1.yml          # here we assign variables to particular systems
+      hostname2.yml
+   
+   library/                  # if any custom modules, put them here (optional)
+   module_utils/             # if any custom module_utils to support modules, put them here (optional)
+   filter_plugins/           # if any custom filter plugins, put them here (optional)
+   
+   site.yml                  # master playbook
+   webservers.yml            # playbook for webserver tier
+   dbservers.yml             # playbook for dbserver tier
+   
+   roles/
+       common/               # this hierarchy represents a "role"
+           tasks/            #
+               main.yml      #  <-- tasks file can include smaller files if warranted
+           handlers/         #
+               main.yml      #  <-- handlers file
+           templates/        #  <-- files for use with the template resource
+               ntp.conf.j2   #  <------- templates end in .j2
+           files/            #
+               bar.txt       #  <-- files for use with the copy resource
+               foo.sh        #  <-- script files for use with the script resource
+           vars/             #
+               main.yml      #  <-- variables associated with this role
+           defaults/         #
+               main.yml      #  <-- default lower priority variables for this role
+           meta/             #
+               main.yml      #  <-- role dependencies
+           library/          # roles can also include custom modules
+           module_utils/     # roles can also include custom module_utils
+           lookup_plugins/   # or other types of plugins, like lookup in this case
+   
+       webtier/              # same kind of structure as "common" was above, done for the webtier role
+       monitoring/           # ""
+       fooapp/               # ""
+
+:file:`roles/` ディレクトリ直下のディレクトリの名前がそのままロールの名前（ロール名）になります。 :file:`common` 、 :file:`webtire` 、 :file:`monitoring` 、 :file:`fooapp` がロール名です。
+
+ロール内のディレクトリ構成やファイル名などは基本的に共通です。
+
+.. code-block:: none
+
+   tasks/            #
+       main.yml      #  <-- tasks file can include smaller files if warranted
+   handlers/         #
+       main.yml      #  <-- handlers file
+   templates/        #  <-- files for use with the template resource
+       ntp.conf.j2   #  <------- templates end in .j2
+   files/            #
+       bar.txt       #  <-- files for use with the copy resource
+       foo.sh        #  <-- script files for use with the script resource
+   vars/             #
+       main.yml      #  <-- variables associated with this role
+   defaults/         #
+       main.yml      #  <-- default lower priority variables for this role
+   meta/             #
+       main.yml      #  <-- role dependencies
+   library/          # roles can also include custom modules
+   module_utils/     # roles can also include custom module_utils
+   lookup_plugins/   # or other types of plugins, like lookup in this case
+
+この中で :file:`tasks/` ディレクトリおよびその中の :file:`main.yml` だけが必須です。他のディレクトリやファイルは必要に応じて作成・配置します。主なディレクトリの内容です。
+
+tasks
+   ロールで実行するタスクを :file:`main.yml` ファイルに記述する。
+handlers
+   :file:`tasks/` ディレクトリの :file:`main.yml` 内のタスクの ``notify`` ディレクティブで呼び出される ``handlers`` セクション内のタスクを :file:`main.yml` ファイルに記述する。
+templates
+   ``template`` モジュールで使用する jinja2 形式のテンプレートファイルを配置する。
+files
+   ``copy`` モジュールなどで使用するファイルを配置する。
+vars
+   ロール内で使用する変数を :file:`main.yml` ファイルに記述する。
+
+.. note::
+
+   ロール内の :file:`templates/` ディレクトリや :file:`files/` ディレクトリ内のファイルを指定するときパスの指定は不要です。直接ファイル名を指定します。 

@@ -1,0 +1,52 @@
+.. _template-file-no-sakusei:
+
+テンプレートファイルの作成
+--------------------------------------------------
+:file:`templates` ディレクトリ内に管理対象ホストにコピーするテンプレートファイル（ index.html ）を作成します。
+
+.. list-table::
+
+   * - 用途
+     - ファイル名
+   * - 親ドメイン
+     - default-index.j2
+   * - バーチャルドメイン
+     - virtual-index.j2
+
+ファイル作成後の状態です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ tree
+   .
+   ├── hosts.yml
+   └── roles
+       └── apache
+           ├── handlers
+           ├── tasks
+           └── templates
+               ├── default-index.j2
+               └── virtual-index.j2
+   
+   5 directories, 3 files
+   [vagrant@ansible ansible-files]$ 
+
+roles/apache/templates/default-index.j2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: none
+
+   <html>
+   <body>
+   This is the page for the parent domain {{ ansible_facts['hostname'] }}.<br>
+   </body>
+   </html>
+
+roles/apache/templates/virtual-index.j2
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. code-block:: none
+
+   <html>
+   <body>
+   Virtual Domain : {{ ansible_facts['hostname'] }}<br>
+   </body>
+   </html>

@@ -1,0 +1,160 @@
+.. _kensho-yo-host-no-sakusei:
+
+検証用ホストの作成
+==================================================
+- Vagrant で検証用ホスト（ Ansible サーバー + 管理対象ホスト x 3 ）を作成します。
+- OS はすべて CentOS 7 です。
+- 使用するユーザーアカウントは vagrant です。
+
+.. _host-no-siyo:
+
+ホストの仕様
+--------------------------------------------------
+.. list-table:: Ansible サーバー
+
+   * - ホスト名
+     - MAC アドレス
+     - IP アドレス
+     - CPU 数
+     - メモリ（MB)
+   * - ansible
+     - 000d58000151
+     - 192.168.1.151
+     - 2
+     - 8192
+
+.. list-table:: 管理対象ホスト
+
+   * - ホスト名
+     - MAC アドレス
+     - IP アドレス
+     - CPU 数
+     - メモリ （MB)
+   * - node1
+     - 000d58000161
+     - 192.168.1.161
+     - 1
+     - 4096
+   * - node2
+     - 000d58000162
+     - 192.168.1.162
+     - 1
+     - 4096
+   * - node3
+     - 000d58000163
+     - 192.168.1.163
+     - 1
+     - 4096
+
+.. _vagrantfle:
+
+Vagrantfile
+--------------------------------------------------
+.. literalinclude:: ./Vagrantfile
+   :language: none
+
+.. _vagrant-command:
+
+Vagrant コマンド
+--------------------------------------------------
+.. code-block:: none
+
+   vagrant up
+   vagrant reload
+
+.. _ansible-server-ni-kanri-taisho-host-no-himitsu-kagi-wo-settei:
+
+Ansible サーバーに管理対象ホストの秘密鍵を設定
+--------------------------------------------------
+Vagrant で作成した仮想マシンの秘密鍵はすべての同じファイル名 private_key です。これを管理対象ホストごとにファイル名を変更し、 Ansible サーバーの :file:`~/.ssh/` ディレクトリにコピーします。
+
+#. 管理対象ホストの秘密鍵を別名にコピーします。
+
+.. list-table::
+
+   * - 管理対象ホスト
+     - 元のファイル名
+     - コピー後のファイル名
+   * - node1
+     - private_key
+     - node1_key
+   * - node2
+     - private_key
+     - node2_key
+   * - node3
+     - private_key
+     - node3_key
+
+2. コピーした秘密鍵を WinSCP などで Ansible サーバーの :file:`~/.ssh/` ディレクトリへコピーします。
+#. コピーした秘密鍵のパーミッションを ``0600`` に変更します。
+
+作業後の Ansible サーバーの :file:`~/.ssh/` ディレクトリの状態です。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ls -l ~/.ssh
+   total 16
+   -rw-------. 1 vagrant vagrant  389 Apr 18 20:26 authorized_keys
+   -rw-------. 1 vagrant vagrant 1706 Apr 18 20:38 node1_key
+   -rw-------. 1 vagrant vagrant 1702 Apr 18 20:49 node2_key
+   -rw-------. 1 vagrant vagrant 1706 Apr 18 21:02 node3_key
+   [vagrant@ansible ~]$
+
+.. _kanri-taisho-host-no-fingerprint-no-shushu:
+
+管理対象ホストのフィンガープリントの収集
+--------------------------------------------------
+Ansible サーバーが管理対象ホストを管理するには、事前に管理対象ホストのフィンガープリントが保存されていなければなりません。フィンガープリントの収集と接続テストとして Ansible サーバーから管理対象ホストに ssh 接続します。
+
+収集した管理対象ホストのフィンガープリントは :file:`~/.ssh/known_hosts` ファイルに記録されます。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ssh 192.168.1.161 -l vagrant -i ~/.ssh/node1_key
+   The authenticity of host '192.168.1.161 (192.168.1.161)' can't be established.
+   ECDSA key fingerprint is SHA256:UNUhsVH7Qld9Ew0ED6X45Yb1f1ms8bDPQ1nl5pfY14k.
+   ECDSA key fingerprint is MD5:e4:f6:82:7e:4f:c0:4c:63:e7:e9:52:45:47:27:ed:44.
+   Are you sure you want to continue connecting (yes/no)? yes
+   Warning: Permanently added '192.168.1.161' (ECDSA) to the list of known hosts.
+   [vagrant@node1 ~]$ logout
+   Connection to 192.168.1.161 closed.
+   [vagrant@ansible ~]$ ssh 192.168.1.162 -l vagrant -i ~/.ssh/node2_key
+   The authenticity of host '192.168.1.162 (192.168.1.162)' can't be established.
+   ECDSA key fingerprint is SHA256:YuZuGUV8z8ELd5Fw9ED4tinwkcF58/NUuX5w8hkghn8.
+   ECDSA key fingerprint is MD5:42:e7:0b:a9:42:84:31:13:68:fc:55:25:80:57:f8:01.
+   Are you sure you want to continue connecting (yes/no)? yes
+   Warning: Permanently added '192.168.1.162' (ECDSA) to the list of known hosts.
+   [vagrant@node2 ~]$ logout
+   Connection to 192.168.1.162 closed.
+   [vagrant@ansible ~]$ ssh 192.168.1.163 -l vagrant -i ~/.ssh/node3_key
+   The authenticity of host '192.168.1.163 (192.168.1.163)' can't be established.
+   ECDSA key fingerprint is SHA256:sQ3tRIeDTA925zIDEkQAAvJ6dkT0zgYWF8DqJLR41Mg.
+   ECDSA key fingerprint is MD5:b8:df:9d:10:8d:89:77:ee:49:97:be:b5:fe:d6:f0:07.
+   Are you sure you want to continue connecting (yes/no)? yes
+   Warning: Permanently added '192.168.1.163' (ECDSA) to the list of known hosts.
+   [vagrant@node3 ~]$ logout
+   Connection to 192.168.1.163 closed.
+   [vagrant@ansible ~]$ ls -l ~/.ssh/
+   total 20
+   -rw-------. 1 vagrant vagrant  389 Apr 18 20:26 authorized_keys
+   -rw-r--r--. 1 vagrant vagrant  525 Apr 18 22:19 known_hosts
+   -rw-------. 1 vagrant vagrant 1706 Apr 18 20:38 node1_key
+   -rw-------. 1 vagrant vagrant 1702 Apr 18 20:49 node2_key
+   -rw-------. 1 vagrant vagrant 1706 Apr 18 21:02 node3_key
+   [vagrant@ansible ~]$ cat ~/.ssh/known_hosts
+   192.168.1.161 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGE6rOPnLm36McURf9DCfyixsu99TtX9Qzxi+zliKO+qAv5V2d2XCpj7YxwUN97T6SMwbBc7FwHNrJcfJr9nqOg=
+   192.168.1.162 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBA3rcVFUncRu9ZT5qxnbJxs4rnt+VU7eusihPkUi2cp1mj8tg0PhACNP5txPjqmX+51/5AOrCmooH878v5kMpPQ=
+   192.168.1.163 ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBLBgk7iSI5wCseZapsb1BVFgOiAVRf/9jE0tNWdzMsjkHRQb/bZzZhJfVxqobgL5DTF9jUyUu8xPa+tSc3SJwLA=
+   [vagrant@ansible ~]$
+
+.. tip::
+
+   Ansible サーバーに :file:`~/.ssh/config` ファイルを作成し次の内容を記述すると、事前にフィンガープリントの収集をしなくても管理対象ホストに接続できます。
+
+   .. code-block:: none
+
+      Host *
+        StrictHostKeyChecking no
+        UserKnownHostsFile=/dev/null
+   
+   この方法は便利ですが、セキュリティの観点からは好ましい方法ではありません。

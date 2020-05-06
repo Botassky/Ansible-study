@@ -1,0 +1,12 @@
+.. _ansible-no-settei-file:
+
+Ansible の設定ファイル
+==================================================
+Ansible は ini 形式の設定ファイルで動作をカスタマイズできます。設定ファイルは複数の場所（ディレクトリ）に書けます。 Ansible が設定ファイルを検索する順序です。
+
+#. 環境変数 :file:`ANSIBLE_CONFIG` に設定されているパス（ファイル）
+#. カレントディレクトリの :file:`ansible.cfg` ファイル
+#. ホームディレクトリの :file:`.ansible.cfg` ファイル
+#. :file:`/etc/ansible/ansible.cfg` ファイル
+
+Ansible は上記順序で設定ファイルを検索し、最初に見つけた設定ファイルを使用します。「 :ref:`kensho-yo-host-no-sakusei` 」で作成した Ansible サーバ－の設定ファイルは :file:`/etc/ansible/ansible.cfg` ファイルです。ほかのファイルは存在しません。 

@@ -1,0 +1,67 @@
+.. _kengen-shokaku:
+
+権限昇格
+==================================================
+``copy`` モジュールで管理対象ホスト node1 の :file:`/etc/motd` ファイルの内容を変更します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd'
+   node1 | FAILED! => {
+       "ansible_facts": {
+           "discovered_interpreter_python": "/usr/bin/python"
+       },
+       "changed": false,
+       "checksum": "4458b979ede3c332f8f2128385df4ba305e58c27",
+       "msg": "Destination /etc not writable"
+   }
+   [vagrant@ansible ~]$
+
+失敗しました。出力に "Destination /etc not writable" とあるので、 :file:`/etc/motd` ファイルに書き込みできなかったようです。 node1 の :file:`/etc/motd` ファイルの状態を確認します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml -m command -a 'ls -l /etc/motd'
+   node1 | CHANGED | rc=0 >>
+   -rw-r--r--. 1 root root 0 Jun  7  2013 /etc/motd
+   [vagrant@ansible ~]$
+
+インベントリからわかるように Ansible サーバーから node1 にログインするときのユーザーは vagrant です。しかし、 :file:`/etc/motd` ファイルを書き換えることができるのは root だけです。このようなとき、Linux コマンドを実行するときは sudo を指定して権限昇格します。 Ansible では ``-b`` オプションを指定して、モジュールの実行時に権限昇格します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ansible node1 -i hosts.yml -m copy -a 'content="Managed by Ansible\n" dest=/etc/motd' -b
+   node1 | CHANGED => {
+       "ansible_facts": {
+           "discovered_interpreter_python": "/usr/bin/python"
+       },
+       "changed": true,
+       "checksum": "4458b979ede3c332f8f2128385df4ba305e58c27",
+       "dest": "/etc/motd",
+       "gid": 0,
+       "group": "root",
+       "md5sum": "65a4290ee5559756ad04e558b0e0c4e3",
+       "mode": "0644",
+       "owner": "root",
+       "secontext": "system_u:object_r:etc_t:s0",
+       "size": 19,
+       "src": "/home/vagrant/.ansible/tmp/ansible-tmp-1587289994.14-173455693341419/source",
+       "state": "file",
+       "uid": 0
+   }
+   [vagrant@ansible ~]$
+
+今度は実行が成功しました。動作確認のため node1 に接続し、 :file:`/etc/motd` ファイルの内容を確認します。
+
+.. code-block:: none
+
+   [vagrant@ansible ~]$ ssh 192.168.1.161 -l vagrant -i ~/.ssh/node1_key
+   Last login: Sun Apr 19 18:54:13 2020 from 192.168.1.151
+   Managed by Ansible
+   [vagrant@node1 ~]$ cat /etc/motd
+   Managed by Ansible
+   [vagrant@node1 ~]$ logout
+   Connection to 192.168.1.161 closed.
+   [vagrant@ansible ~]$
+
+ログイン時に :file:`/etc/motd` ファイルに設定した文字列が表示されているので、正しく変更されたことがわかります。 :file:`/etc/motd` ファイルの内容も変更後の内容になっています。

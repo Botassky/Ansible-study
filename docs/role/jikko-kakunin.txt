@@ -1,0 +1,26 @@
+.. _jikko-kakunin:
+
+実行確認
+--------------------------------------------------
+名前解決のため C:\\Windows\\System32\\drivers\\etc\\hosts ファイルに次の内容を追記します。
+
+.. code-block:: none
+
+   192.168.1.162       node2
+   192.168.1.162       virtual-node2
+   192.168.1.163       node3
+   192.168.1.163       virtual-node3
+
+親ドメインのページ表示
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. image:: img/role1.png
+.. image:: img/role3.png
+
+バーチャルホストのページ表示
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. image:: img/role2.png
+.. image:: img/role4.png
+
+.. note::
+
+   実行確認後は C:\\Windows\\System32\\drivers\\etc\\hosts ファイルに追記した 4 行は削除してください。

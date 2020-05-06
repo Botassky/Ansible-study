@@ -1,0 +1,81 @@
+.. _hikaku-enzan-shi:
+
+比較演算子
+--------------------------------------------------
+比較演算子は 2 つの値を比較するときに使用します。例えば、CentOS の管理対象ホストだけをシャットダウンしたいのであれば :ref:`fact-hensu` の ``ansible_distribution`` の値が CentOS で判断できます。
+
+.. code-block:: none
+
+   - name: 特定の OS の管理対象ホストをシャットダウンする
+     hosts: all
+     
+     tasks:
+     - name: CentOS だけシャットダウンする
+       command: /sbin/shutdown -t 15
+       become: yes
+       when: ansible_facts['distribution'] == "CentOS"
+
+実行前の管理対象ホストの状態です。
+
+.. code-block:: none
+
+   C:\vagrant\ansible-study2>vagrant status
+   Current machine states:
+   
+   centos7                   running (virtualbox)
+   centos8                   running (virtualbox)
+   debian10                  running (virtualbox)
+   ubuntu18                  running (virtualbox)
+   
+   This environment represents multiple VMs. The VMs are all listed
+   above with their current state. For more information about a specific
+   VM, run `vagrant status NAME`.
+   
+   C:\vagrant\ansible-study2>
+
+実行ログです。 ``when`` ディレクティブに指定した条件に合致する管理対象ホストは changed です。合致しない管理対象ホストはタスクの実行をスキップしたので skipping です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts2.yml shutdown.yml 
+   
+   PLAY [特定の OS の管理対象ホストをシャットダウンする] ****************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [debian10]
+   ok: [centos7]
+   ok: [ubuntu18]
+   ok: [centos8]
+   
+   TASK [CentOS だけシャットダウンする] ***********************************************************************************************************************************
+   skipping: [debian10]
+   skipping: [ubuntu18]
+   [WARNING]: Module invocation had junk after the JSON data:   Broadcast message from root@centos7 (Sun 2020-05-03 14:05:07 UTC):    The system is going down for power-off at Sun 2020-05-03 14:06:07 UTC!
+   changed: [centos7]
+   changed: [centos8]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   centos7                    : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   centos8                    : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   debian10                   : ok=1    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   ubuntu18                   : ok=1    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+実行後の管理対象ホストの状態です。実行ログで changed になった管理対象ホストが poweroff です。
+
+.. code-block:: none
+
+   C:\vagrant\ansible-study2>vagrant status
+   Current machine states:
+   
+   centos7                   poweroff (virtualbox)
+   centos8                   poweroff (virtualbox)
+   debian10                  running (virtualbox)
+   ubuntu18                  running (virtualbox)
+   
+   This environment represents multiple VMs. The VMs are all listed
+   above with their current state. For more information about a specific
+   VM, run `vagrant status NAME`.
+   
+   C:\vagrant\ansible-study2>

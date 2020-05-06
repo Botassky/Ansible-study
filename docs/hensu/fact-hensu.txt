@@ -1,0 +1,174 @@
+.. _fact-hensu:
+
+ファクト変数
+==================================================
+管理対象ホストのシステム情報が格納された変数を「ファクト変数」と呼びます。
+
+.. _fact-hensu-naiyo:
+
+ファクト変数の内容
+--------------------------------------------------
+ファクト変数はアドホックコマンドで ``setup`` モジュールで確認できます。次の実行結果は管理対象ホスト node1 のファクト変数の内容です。
+
+.. literalinclude:: ./fact-vars.log
+   :language: none
+
+.. _fact_hensu-no-shushu-taiming:
+
+ファクト変数の収集タイミング
+--------------------------------------------------
+プレイの実行時にファクト変数の収集は次のメッセージが表示されたタイミングで実施します。
+
+.. code-block:: none
+
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+
+.. _fact_hensu-ga-fuyo-na-toki:
+
+ファクト変数が不要なとき
+--------------------------------------------------
+プレイ内でファクト変数を使用しないときは、 5 行目のように gather_facts ディレクティブに no を設定するとファクト変数を収集しません。
+
+.. code-block:: none
+   :linenos:
+   :emphasize-lines: 5
+
+   ---
+   - name: Apache server installed
+     hosts: web
+     become: yes
+     gather_facts: no
+
+.. fact-hensu-no-sansho-hoho:
+
+ファクト変数の参照方法
+--------------------------------------------------
+ファクト変数は次のように参照します。
+
+:command:`ansible_facts['変数名']`
+
+ファクト変数と参照の例です。
+
+.. code-block:: none
+
+   "ansible_distribution": "CentOS",
+
+:command:`ansible_facts['distribution']`
+
+.. code-block:: none
+
+   "ansible_default_ipv4": {
+       "address": "10.0.2.15",
+
+:command:`ansible_facts['default_ipv4']['address']`
+
+.. code-block:: none
+
+   "ansible_all_ipv4_addresses": [
+       "10.0.2.15",
+       "192.168.1.161"
+
+| :command:`ansible_facts['all_ipv4_addresses'][0]`
+| :command:`ansible_facts['all_ipv4_addresses'][1]`
+
+プレイ内で参照する場合、他の変数と同様に ``{{`` と ``}}`` でくくって使用します。
+
+.. code-block:: none
+
+   ---
+   - name: show fact variables
+     hosts: web
+     
+     tasks:
+     - name: show ansble_distribution
+       debug:
+         msg: "{{ inventory_hostname }} のディストリビューションは {{ ansible_facts['distribution'] }} です。"
+     - name: show ansible_default_ipv4.address
+       debug:
+         msg: "デフォルトの IPv4 アドレスは {{ ansible_facts['default_ipv4']['address'] }} です。"
+     - name: show all_ipv4_addresses
+       debug:
+         msg: "{{ inventory_hostname }} の IP アドレスは {{ ansible_facts['all_ipv4_addresses'][0] }} と {{ ansible_facts['all_ipv4_addresses'][1] }} です。"
+
+実行結果です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml showfactvars.yml 
+   
+   PLAY [show fact variables] **********************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node2]
+   ok: [node3]
+   
+   TASK [show ansble_distribution] *****************************************************************************************************************************
+   ok: [node3] => {
+       "msg": "node3 のディストリビューションは CentOS です。"
+   }
+   ok: [node2] => {
+       "msg": "node2 のディストリビューションは CentOS です。"
+   }
+   
+   TASK [show ansible_default_ipv4.address] ********************************************************************************************************************
+   ok: [node3] => {
+       "msg": "デフォルトの IPv4 アドレスは 10.0.2.15 です。"
+   }
+   ok: [node2] => {
+       "msg": "デフォルトの IPv4 アドレスは 10.0.2.15 です。"
+   }
+   
+   TASK [show all_ipv4_addresses] ******************************************************************************************************************************
+   ok: [node3] => {
+       "msg": "node3 の IP アドレスは 10.0.2.15 と 192.168.1.163 です。"
+   }
+   ok: [node2] => {
+       "msg": "node2 の IP アドレスは 192.168.1.162 と 10.0.2.15 です。"
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+参考までに gather_facts ディレクティブに no を設定し、ファクト変数を収集しなかった場合です。 
+
+.. code-block:: none
+
+   ---
+   - name: show fact variables
+     hosts: web
+     gather_facts: no
+     
+     tasks:
+     - name: show ansble_distribution
+       debug:
+         msg: "{{ inventory_hostname }} のディストリビューションは {{ ansible_facts['distribution'] }} です。"
+     - name: show ansible_default_ipv4.address
+       debug:
+         msg: "デフォルトの IPv4 アドレスは {{ ansible_facts['default_ipv4']['address'] }} です。"
+     - name: show all_ipv4_addresses
+       debug:
+         msg: "{{ inventory_hostname }} の IP アドレスは {{ ansible_facts['all_ipv4_addresses'][0] }} と {{ ansible_facts['all_ipv4_addresses'][1] }} です。"
+
+この場合、ファクト変数自体が定義されないため、ファクト変数を参照しているタスクでエラーが発生します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml showfactvars.yml 
+   
+   PLAY [show fact variables] **********************************************************************************************************************************
+   
+   TASK [show ansble_distribution] *****************************************************************************************************************************
+   fatal: [node3]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'dict object' has no attribute 'distribution'\n\nThe error appears to be in '/home/vagrant/ansible-files/showfactvars.yml': line 7, column 5, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  tasks:\n  - name: show ansble_distribution\n    ^ here\n"}
+   fatal: [node2]: FAILED! => {"msg": "The task includes an option with an undefined variable. The error was: 'dict object' has no attribute 'distribution'\n\nThe error appears to be in '/home/vagrant/ansible-files/showfactvars.yml': line 7, column 5, but may\nbe elsewhere in the file depending on the exact syntax problem.\n\nThe offending line appears to be:\n\n  tasks:\n  - name: show ansble_distribution\n    ^ here\n"}
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 

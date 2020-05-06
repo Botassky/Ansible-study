@@ -1,0 +1,223 @@
+.. _task-no-sakusei:
+
+タスクの作成
+--------------------------------------------------
+まず、メインとなるプレイブックファイル apache.yml を作成します。 ``import_role`` モジュールを使用してロールを呼び出します。
+
+.. code-block:: none
+
+   ---
+   - name: Deploy web server
+     hosts: web
+     become: yes
+   
+     tasks:
+     - name: Display start message
+       debug:
+         msg: "Beginning web server configuration."
+     - name: Deploy Apache Server
+       import_role:
+         name: apache
+     - name: Display end message
+       debug:
+         msg: "Web server has been configured."
+
+次にロール apache のタスクを :file:`roles/apache/tasks/main.yml` ファイルに記述します。
+
+.. code-block:: none
+   :linenos:
+
+   ---
+   - name: Install/Update Apache
+     yum:
+       name: httpd
+       state: latest
+     notify: restart httpd service
+   - name: Open http port
+     firewalld:
+       service: http
+       permanent: yes
+       state: enabled
+   - name: Copy virtual host configuration
+     template:
+       src: vhost.j2
+       dest: /etc/httpd/conf.d/vhost.conf
+       owner: root
+       group: root
+       mode: 0644
+     notify: restart httpd service
+   - name: Create a directory for the contents of the virtual host
+     file:
+       path: /var/www/vhost_html/
+       state: directory
+   - name: Copy the index.html file for the original domain.
+     template:
+       src: default-index.j2
+       dest: /var/www/html/index.html
+   - name: Copy the index.html file for the virtual host.
+     template:
+       src: virtual-index.j2
+       dest: /var/www/vhost_html/index.html
+
+- 2 ～ 6 行目　→　Apache の最新版をインストールする。すでに Apache がインストール済みのときは最新版に更新する。
+- 7 ～ 11 行目　→　ファイアウォールの http ポートを開放する。
+- 12 ～ 19 行目　→　バーチャルホスト用の設定ファイルをコピーする。
+- 20 ～ 23 行目　→　バーチャルホストのコンテンツ用のディレクトリ :file:`/var/www/vhost_html` を作成する。
+- 24 ～ 27 行目　→　元ドメイン用の :file:`index.html` ファイルをコピーする。
+- 28 ～ 31 行目　→　バーチャルホスト用の :file:`index.html` ファイルをコピーする。
+
+最後に :file:`roles/apache/handlers/main.yml` ファイルに上記のタスクから呼び出される handlers を記述します。
+
+.. code-block:: none
+
+   ---
+   - name: Apache service restart
+     systemd:
+       name: httpd.service
+       state: restarted
+       enabled: yes
+     listen: restart httpd service
+
+- :file:`roles/apache/handlers/main.yml`　→　Apache の最新版をインストールまたは更新したときは Apache のサービスを再起動する。
+
+各ファイルの作成後の状態です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ tree
+   .
+   ├── apache.yml
+   ├── hosts.yml
+   └── roles
+       └── apache
+           ├── handlers
+           │   └── main.yml
+           ├── tasks
+           │   └── main.yml
+           └── templates
+               ├── default-index.j2
+               ├── vhost.j2
+               └── virtual-index.j2
+   
+   5 directories, 7 files
+   [vagrant@ansible ansible-files]$ 
+
+実行ログです。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml apache.yml 
+   
+   PLAY [Deploy web server] ************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [Display start message] ********************************************************************************************************************************
+   ok: [node3] => {
+       "msg": "Beginning web server configuration."
+   }
+   ok: [node2] => {
+       "msg": "Beginning web server configuration."
+   }
+   
+   TASK [apache : Install/Update Apache] ***********************************************************************************************************************
+   changed: [node3]
+   changed: [node2]
+   
+   TASK [apache : Open http port] ******************************************************************************************************************************
+   changed: [node3]
+   changed: [node2]
+   
+   TASK [apache : Copy virtual host configuration] *************************************************************************************************************
+   changed: [node2]
+   changed: [node3]
+   
+   TASK [apache : Create a directory for the contents of the virtual host] *************************************************************************************
+   changed: [node2]
+   changed: [node3]
+   
+   TASK [apache : Copy the index.html file for the original domain.] *******************************************************************************************
+   changed: [node3]
+   changed: [node2]
+   
+   TASK [apache : Copy the index.html file for the virtual host.] **********************************************************************************************
+   changed: [node3]
+   changed: [node2]
+   
+   TASK [Display end message] **********************************************************************************************************************************
+   ok: [node3] => {
+       "msg": "Web server has been configured."
+   }
+   ok: [node2] => {
+       "msg": "Web server has been configured."
+   }
+   
+   RUNNING HANDLER [apache : Apache service restart] ***********************************************************************************************************
+   changed: [node2]
+   changed: [node3]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=10   changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=10   changed=7    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+べき等性が保たれているか確認するため、もう一度実行したときのログです。すべて ok になっており、べき等性が保たれています。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml apache.yml 
+   
+   PLAY [Deploy web server] ************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [Display start message] ********************************************************************************************************************************
+   ok: [node3] => {
+       "msg": "Beginning web server configuration."
+   }
+   ok: [node2] => {
+       "msg": "Beginning web server configuration."
+   }
+   
+   TASK [apache : Install/Update Apache] ***********************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [apache : Open http port] ******************************************************************************************************************************
+   ok: [node2]
+   ok: [node3]
+   
+   TASK [apache : Copy virtual host configuration] *************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [apache : Create a directory for the contents of the virtual host] *************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [apache : Copy the index.html file for the original domain.] *******************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [apache : Copy the index.html file for the virtual host.] **********************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [Display end message] **********************************************************************************************************************************
+   ok: [node3] => {
+       "msg": "Web server has been configured."
+   }
+   ok: [node2] => {
+       "msg": "Web server has been configured."
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=9    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=9    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 

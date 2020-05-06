@@ -1,0 +1,215 @@
+.. _magic-hensu:
+
+マジック変数
+==================================================
+Ansible の定義済み変数を「マジック変数」と呼びます。定義済みなので、前段の変数 stage のような定義は不要です。主にインベントリの内容や実行環境情報を保持します。
+
+.. _omona-magic-hensu:
+
+主なマジック変数
+--------------------------------------------------
+inventory_hostname
+   インベントリ内の管理対象ホスト名
+group_names
+   インベントリ内で管理対象ホストが属するグループの一覧
+groups
+   インベントリ内の全グループと管理対象ホストの一覧
+inventory_dir
+   インベントリファイルのディレクトリパス（インベントリファイル名は含まれない）
+inventory_file
+   インベントリファイルのパス
+playbook_dir
+   プレイブックファイルのディレクトリパス（プレイブックファイル名は含まれない）
+host_vars
+   管理対象ホストの :ref:`fact-hensu` を集めたもの
+
+.. _omona-magic-hensu-no-kakunin:
+
+主なマジック変数の確認
+--------------------------------------------------
+次の内容で主なマジック変数の値を確認します。
+
+**■ インベントリファイル**
+
+.. code-block:: none
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+       node2:
+         ansible_host: 192.168.1.162
+         ansible_ssh_private_key_file: ~/.ssh/node2_key
+       node3:
+           ansible_host: 192.168.1.163
+           ansible_ssh_private_key_file: ~/.ssh/node3_key
+           stage: prod
+     children:
+       web:
+         vars:
+           stage: dev
+         hosts:
+           node2:
+           node3:
+
+**■ プレイブックファイル**
+
+.. code-block:: none
+
+   - name: 主なマジック変数の確認
+     hosts: all
+   
+     tasks:
+     - name: inventory_hostname の値
+       debug:
+         var: inventory_hostname
+     - name: group_names の値
+       debug:
+         var: group_names
+     - name: groups の値
+       debug:
+         var: groups
+     - name: inventory_dir の値
+       debug:
+         var: inventory_dir
+     - name: inventory_file の値
+       debug:
+         var: inventory_file
+     - name: playbook_dir の値
+       debug:
+         var: playbook_dir
+
+**■ 確認**
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml showmagcivars.yml 
+   
+   PLAY [主なマジック変数の確認] ******************************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node1]
+   ok: [node2]
+   
+   TASK [inventory_hostname の値] ********************************************************************************************************************************
+   ok: [node1] => {
+       "inventory_hostname": "node1"
+   }
+   ok: [node3] => {
+       "inventory_hostname": "node3"
+   }
+   ok: [node2] => {
+       "inventory_hostname": "node2"
+   }
+   
+   TASK [group_names の値] ***************************************************************************************************************************************
+   ok: [node1] => {
+       "group_names": [
+           "ungrouped"
+       ]
+   }
+   ok: [node3] => {
+       "group_names": [
+           "web"
+       ]
+   }
+   ok: [node2] => {
+       "group_names": [
+           "web"
+       ]
+   }
+   
+   TASK [groups の値] ********************************************************************************************************************************************
+   ok: [node1] => {
+       "groups": {
+           "all": [
+               "node1", 
+               "node3", 
+               "node2"
+           ], 
+           "ungrouped": [
+               "node1"
+           ], 
+           "web": [
+               "node3", 
+               "node2"
+           ]
+       }
+   }
+   ok: [node3] => {
+       "groups": {
+           "all": [
+               "node1", 
+               "node3", 
+               "node2"
+           ], 
+           "ungrouped": [
+               "node1"
+           ], 
+           "web": [
+               "node3", 
+               "node2"
+           ]
+       }
+   }
+   ok: [node2] => {
+       "groups": {
+           "all": [
+               "node1", 
+               "node3", 
+               "node2"
+           ], 
+           "ungrouped": [
+               "node1"
+           ], 
+           "web": [
+               "node3", 
+               "node2"
+           ]
+       }
+   }
+   
+   TASK [inventory_dir の値] *************************************************************************************************************************************
+   ok: [node1] => {
+       "inventory_dir": "/home/vagrant/ansible-files"
+   }
+   ok: [node3] => {
+       "inventory_dir": "/home/vagrant/ansible-files"
+   }
+   ok: [node2] => {
+       "inventory_dir": "/home/vagrant/ansible-files"
+   }
+   
+   TASK [inventory_file の値] ************************************************************************************************************************************
+   ok: [node1] => {
+       "inventory_file": "/home/vagrant/ansible-files/hosts.yml"
+   }
+   ok: [node3] => {
+       "inventory_file": "/home/vagrant/ansible-files/hosts.yml"
+   }
+   ok: [node2] => {
+       "inventory_file": "/home/vagrant/ansible-files/hosts.yml"
+   }
+   
+   TASK [playbook_dir の値] **************************************************************************************************************************************
+   ok: [node1] => {
+       "playbook_dir": "/home/vagrant/ansible-files"
+   }
+   ok: [node3] => {
+       "playbook_dir": "/home/vagrant/ansible-files"
+   }
+   ok: [node2] => {
+       "playbook_dir": "/home/vagrant/ansible-files"
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=7    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node2                      : ok=7    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=7    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 

@@ -1,0 +1,37 @@
+.. _hitsuyo-na-directory-no-sakusei:
+
+必要なディレクトリの作成
+--------------------------------------------------
+要件にあわせて必要なディレクトリを作成します。
+
+- ロール名：apache
+- ロール apache 内に必要なディレクトリ： :file:`tasks` 、 :file:`handlers` 、 :file:`templates`
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ mkdir roles/
+   [vagrant@ansible ansible-files]$ cd roles/
+   [vagrant@ansible roles]$ mkdir apache/
+   [vagrant@ansible roles]$ cd apache/
+   [vagrant@ansible apache]$ mkdir tasks/
+   [vagrant@ansible apache]$ mkdir handlers/
+   [vagrant@ansible apache]$ mkdir templates/
+   [vagrant@ansible apache]$ 
+
+
+ディレクトリ作成後の状態です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ tree
+   .
+   ├── hosts.yml
+   └── roles
+       └── apache
+           ├── handlers
+           ├── tasks
+           └── templates
+   
+   5 directories, 1 file
+   [vagrant@ansible ansible-files]$ 
+

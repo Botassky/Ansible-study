@@ -1,0 +1,121 @@
+.. _playbook-no-jikko:
+
+プレイブックの実行
+==================================================
+``ansible-playbook`` コマンドでプレイブックを実行します。以下のオプションは ``ansible`` コマンドと同じです。
+
+-i, --inventory, --inventory-file
+   インベントリファイルを指定します。
+--list-hosts
+   インベントリ内で実行対象になる管理対象ホストを確認します。
+
+次のオプションも使用できます。
+
+--syntax-check
+   プレイブック内のプレイの構文をチェックします。
+
+プレイブックを実行する前に、まず構文に誤りがないかチェックします。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml --syntax-check apache.yml 
+   
+   playbook: apache.yml
+   [vagrant@ansible ansible-files]$ 
+
+構文に誤りがないことを確認したら、次に実行対象になる管理対象ホストを確認します。今回は node2 と node3 が実行対象です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml --list-hosts apache.yml
+   
+   playbook: apache.yml
+   
+     play #1 (web): Apache server installed        TAGS: []
+       pattern: [u'web']
+       hosts (2):
+         node3
+         node2
+   [vagrant@ansible ansible-files]$ 
+
+次にプレイブックを実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml apache.yml 
+   
+   PLAY [Apache server installed] ******************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [latest Apache version installed] **********************************************************************************************************************
+   changed: [node2]
+   changed: [node3]
+   
+   TASK [Apache enabled and running] ***************************************************************************************************************************
+   changed: [node2]
+   changed: [node3]
+   
+   TASK [copy index.html] **************************************************************************************************************************************
+   changed: [node3]
+   changed: [node2]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=4    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=4    changed=3    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+プレイブックの実行の成否は PLAY RECAP で確認します。実行対象の管理対象ホストごとに、実行状況のサマリが表示されます。
+
+ok
+   - 実行が成功したタスクの数です。
+   - 管理対象ホストが変更されたか否かに関係なくカウントされます。
+changed
+   - 管理対象ホストを変更したタスクの数です。
+unreachable
+   - 管理対象ホストに接続できなかったタスクの数です。
+failed
+   - タスクの実行に失敗した数です。
+skipped
+   - 実行がスキップされた（飛ばされた）タスクの数です。
+rescued
+   - block 内でエラーが発生したが、 rescure ブロックで処理を継続した数です。
+ignored
+   - タスクの実行は失敗したが、その失敗が無視されたタスクの数です。
+
+通常のプレイブックでは ok / changed / skipped だけカウントされていたら、そのプレイブックの実行は成功です。
+
+もう一度、プレイブックを実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml apache.yml 
+   
+   PLAY [Apache server installed] ******************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [latest Apache version installed] **********************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [Apache enabled and running] ***************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   TASK [copy index.html] **************************************************************************************************************************************
+   ok: [node3]
+   ok: [node2]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node2                      : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=4    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+PLAY RECAP の結果が OK だけです。すでに管理対象ホストが「あるべき状態」になっているところにプレイブックを再度実行したので何も変わりませんでした。このように、アドホックコマンドと同様にプレイブックでもべき等性は保たれています。
