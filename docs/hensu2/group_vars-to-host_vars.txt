@@ -1,0 +1,79 @@
+.. _group_vars-to-host_vars:
+
+group_vars ディレクトリと host_vars ディレクトリ
+==================================================
+インベントリファイルの分割後のファイルは :file:`group_vars` ディレクトリと :file:`host_vars` ディレクトリに配置します。
+
+group_vars ディレクトリ
+   - グループ全体に適用する変数を定義します。
+   - 定義した変数を「グループ変数」と呼びます。
+   - グループ名をファイル名にします。
+host_vars ディレクトリ
+   - ホストだけに適用する（ホスト固有の）変数を定義します。
+   - 定義した変数を「ホスト変数」と呼びます。
+   - インベントリ内のホスト名をファイル名にします。
+
+.. important::
+
+    :file:`group_vars` ディレクトリと :file:`host_vars` ディレクトリはインベントリファイルと同じディレクトリ内に作成しなければなりません。
+
+下記のインベントリファイル ``hosts.yml`` を分割します。
+
+.. code-block:: none
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+         stage: prod
+     children:
+       web:
+         vars:
+           stage: dev
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+
+``ansible-inventory`` コマンドで状態を確認します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-inventory -i hosts.yml --list --yaml
+   all:
+     children:
+       ungrouped:
+         hosts:
+           node1:
+             ansible_host: 192.168.1.161
+             ansible_ssh_private_key_file: ~/.ssh/node1_key
+             ansible_user: vagrant
+             stage: prod
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+             ansible_user: vagrant
+             stage: dev
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+             ansible_user: vagrant
+             stage: dev
+   [vagrant@ansible ansible-files]$ ansible-inventory -i hosts.yml --graph
+   @all:
+     |--@ungrouped:
+     |  |--node1
+     |--@web:
+     |  |--node2
+     |  |--node3
+   [vagrant@ansible ansible-files]$ 
+

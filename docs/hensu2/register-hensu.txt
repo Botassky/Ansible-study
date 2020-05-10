@@ -1,0 +1,113 @@
+.. _register-hensu:
+
+レジスタ変数
+==================================================
+``register`` ディレクティブで定義するレジスタ変数を使用すると、モジュールの実行結果や戻り値を確認できます。
+
+次のプレイでレジスタ変数の値を確認します。
+
+.. code-block:: none
+
+   - name: レジスタ変数を確認するプレイ 
+     hosts: node1 
+     gather_facts: no
+   
+     tasks:
+     - name: Linux コマンドを実行
+       command: 'ls -a'
+       register: result
+     - name: レジスタ変数の確認
+       debug:
+         var: result
+
+実行結果です。レジスタ変数 result が表示されています。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml register-variables.yml 
+   
+   PLAY [レジスタ変数を確認するプレイ] ***************************************************************************************************************************************
+   
+   TASK [Linux コマンドを実行] ****************************************************************************************************************************************
+   changed: [node1]
+   
+   TASK [レジスタ変数の確認] ********************************************************************************************************************************************
+   ok: [node1] => {
+       "result": {
+           "ansible_facts": {
+               "discovered_interpreter_python": "/usr/bin/python"
+           }, 
+           "changed": true, 
+           "cmd": [
+               "ls", 
+               "-a"
+           ], 
+           "delta": "0:00:00.007731", 
+           "end": "2020-05-09 23:03:17.472226", 
+           "failed": false, 
+           "rc": 0, 
+           "start": "2020-05-09 23:03:17.464495", 
+           "stderr": "", 
+           "stderr_lines": [], 
+           "stdout": ".\n..\n.ansible\n.bash_history\n.bash_logout\n.bash_profile\n.bashrc\n.ssh", 
+           "stdout_lines": [
+               ".", 
+               "..", 
+               ".ansible", 
+               ".bash_history", 
+               ".bash_logout", 
+               ".bash_profile", 
+               ".bashrc", 
+               ".ssh"
+           ]
+       }
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ cat register-variables.yml 
+
+レジスタ変数の主な内容です。
+
+changed
+   - タスクの実行で対象ノードが変更されたか否かの結果が設定されます
+
+      - true : 対象ノードが変更されました
+      - false : 対象ノードが変更されませんでした
+
+failed
+   - 対象ノードでタスクの実行が失敗したか否かの結果が設定されます
+
+      - true : タスクの実行が失敗しました
+      - false : タスクの実行が失敗しませんでした
+
+msg
+   - モジュール実行時のメッセージが設定されます
+
+rc
+   - return code の略
+   - タスクの終了ステータス（戻り値）が設定されます
+
+      - 0 : 成功
+      - 1 : 失敗（使用するモジュールなどにより 1 以外のこともある）
+
+skipped
+   - 対象ノードでタスクの実行がスキップされたか否かの結果が設定されます
+
+      - true : タスクの実行がスキップされました
+      - false : タスクの実行がスキップされませんでした
+
+stderr
+   - 標準エラー出力に出力された文字列が設定されます
+   - 改行は改行文字\nで表され、 1 行で設定されます
+
+stderr_lines
+   - stderr を 1 行ごとに分割した内容（＝ stderr の内容をリストで格納したもの）です
+
+stdout
+   - 標準出力に出力された文字列です
+   - 改行は改行文字\nで表され、 1 行で設定されます
+
+stdout_lines
+   - stdout を 1 行ごとに分割した内容（＝ stdout の内容をリストで格納したもの）です

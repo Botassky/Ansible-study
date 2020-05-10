@@ -1,0 +1,174 @@
+.. _error-tosite-atukau-jyoken:
+
+エラーとして扱う条件を設定し、条件に合致したときだけエラーとして扱う
+----------------------------------------------------------------------------------------------------
+「 :ref:`error-handling-toha` 」で説明したとおり、Ansible は戻り値が 0 以外の時にエラーが発生したと判断し処理します。多くの場合、これで問題ありません。しかし、次のような場合に問題が生じます。
+
+「 ``diff`` コマンドを使用してファイルの内容が処理の前後で差異が発生していることを確認する」
+
+``diff`` コマンドの戻り値です。
+
+- 2 つのファイルの内容に差異がなかったとき　→　0
+- 2 つのファイルの内容に差異があったととき　→　1
+- ファイルのどちらかまたは両方が存在しないとき　→　2
+
+処理としては差異が発生している状態（＝　戻り値が 1 ）が正しく、それ以外は誤りになります。このようなときは、タスクにレジスタ変数と ``failed_when`` ディレクティブを組み合わせて、エラーとして扱う条件を設定します。設定した条件を満たすとき、タスクはエラーとして判断し処理します。
+
+次のプレイで ``failed_when`` ディレクティブの動作を確認します。
+
+.. code-block:: none
+
+   - name: 2 つのファイルを比較する
+     hosts: node1
+     gather_facts: no
+   
+     tasks:
+     - name: ファイルの比較
+       command: 'diff file-1 file-2'
+       register: diff_result
+       failed_when: diff_result['rc'] != 1
+     - name: レジスタ変数の内容確認
+       debug:
+         var: diff_result
+
+ファイルの内容が異なる場合の実行ログです。本来ならタスク "ファイルの比較" でエラーになり処理が中断されますが、 ``failde_when`` ディレクティブでエラーの条件を変更しているため最後まで処理できました。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml file-diff.yml 
+   
+   PLAY [2 つのファイルを比較する] ****************************************************************************************************************************************
+   
+   TASK [ファイルの比較] **********************************************************************************************************************************************
+   changed: [node1]
+   
+   TASK [レジスタ変数の内容確認] ******************************************************************************************************************************************
+   ok: [node1] => {
+       "diff_result": {
+           "ansible_facts": {
+               "discovered_interpreter_python": "/usr/bin/python"
+           }, 
+           "changed": true, 
+           "cmd": [
+               "diff", 
+               "file-1", 
+               "file-2"
+           ], 
+           "delta": "0:00:00.006412", 
+           "end": "2020-05-10 13:25:45.035609", 
+           "failed": false, 
+           "failed_when_result": false, 
+           "msg": "non-zero return code", 
+           "rc": 1, 
+           "start": "2020-05-10 13:25:45.029197", 
+           "stderr": "", 
+           "stderr_lines": [], 
+           "stdout": "1c1\n< abc\n---\n> xyz", 
+           "stdout_lines": [
+               "1c1", 
+               "< abc", 
+               "---", 
+               "> xyz"
+           ]
+       }
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+ファイルの内容が同じ場合の実行ログです。タスク "ファイルの比較" のエラーメッセージ内に **"rc": 0** が含まれています。本来ならエラーにならないのですが、 ``failed_when`` ディレクティブに設定したエラーとして扱う条件に合致したためエラーとなり処理を中断しました。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml file-diff.yml 
+   
+   PLAY [2 つのファイルを比較する] ****************************************************************************************************************************************
+   
+   TASK [ファイルの比較] **********************************************************************************************************************************************
+   fatal: [node1]: FAILED! => {"ansible_facts": {"discovered_interpreter_python": "/usr/bin/python"}, "changed": true, "cmd": ["diff", "file-1", "file-2"], "delta": "0:00:00.004663", "end": "2020-05-10 13:30:46.133139", "failed_when_result": true, "rc": 0, "start": "2020-05-10 13:30:46.128476", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+ファイル file-2 が存在しない場合の実行ログです。タスク "ファイルの比較" のエラーメッセージ内に **"rc": 2** が含まれています。 ``failed_when`` ディレクティブに設定したエラーとして扱う条件に合致したためエラーとなり処理を中断しました。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml file-diff.yml 
+   
+   PLAY [2 つのファイルを比較する] ****************************************************************************************************************************************
+   
+   TASK [ファイルの比較] **********************************************************************************************************************************************
+   fatal: [node1]: FAILED! => {"ansible_facts": {"discovered_interpreter_python": "/usr/bin/python"}, "changed": true, "cmd": ["diff", "file-1", "file-2"], "delta": "0:00:00.007034", "end": "2020-05-10 13:34:52.272081", "failed_when_result": true, "msg": "non-zero return code", "rc": 2, "start": "2020-05-10 13:34:52.265047", "stderr": "diff: file-2: No such file or directory", "stderr_lines": ["diff: file-2: No such file or directory"], "stdout": "", "stdout_lines": []}
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
+
+上述のプレイに ``ignore_errors`` ディレクティブを指定しました。
+
+.. code-block:: none
+
+   - name: 2 つのファイルを比較する
+     hosts: node1
+     gather_facts: no
+   
+     tasks:
+     - name: ファイルの比較
+       command: 'diff file-1 file-2'
+       register: diff_result
+       failed_when: diff_result['rc'] != 1
+       ignore_errors: yes
+     - name: レジスタ変数の内容確認
+       debug:
+         var: diff_result
+
+この場合は ``failed_when`` の条件に合致してエラーと判断した後、 ``ignore_errors`` ディレクティブでエラーを無視します。ファイル file-2 が存在しないときの実行ログです。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml file-diff.yml 
+   
+   PLAY [2 つのファイルを比較する] ****************************************************************************************************************************************
+   
+   TASK [ファイルの比較] **********************************************************************************************************************************************
+   fatal: [node1]: FAILED! => {"ansible_facts": {"discovered_interpreter_python": "/usr/bin/python"}, "changed": true, "cmd": ["diff", "file-1", "file-2"], "delta": "0:00:00.006167", "end": "2020-05-10 13:36:33.737414", "failed_when_result": true, "msg": "non-zero return code", "rc": 2, "start": "2020-05-10 13:36:33.731247", "stderr": "diff: file-2: No such file or directory", "stderr_lines": ["diff: file-2: No such file or directory"], "stdout": "", "stdout_lines": []}
+   ...ignoring
+   
+   TASK [レジスタ変数の内容確認] ******************************************************************************************************************************************
+   ok: [node1] => {
+       "diff_result": {
+           "ansible_facts": {
+               "discovered_interpreter_python": "/usr/bin/python"
+           }, 
+           "changed": true, 
+           "cmd": [
+               "diff", 
+               "file-1", 
+               "file-2"
+           ], 
+           "delta": "0:00:00.006167", 
+           "end": "2020-05-10 13:36:33.737414", 
+           "failed": true, 
+           "failed_when_result": true, 
+           "msg": "non-zero return code", 
+           "rc": 2, 
+           "start": "2020-05-10 13:36:33.731247", 
+           "stderr": "diff: file-2: No such file or directory", 
+           "stderr_lines": [
+               "diff: file-2: No such file or directory"
+           ], 
+           "stdout": "", 
+           "stdout_lines": []
+       }
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=1   
+   
+   [vagrant@ansible ansible-files]$ 

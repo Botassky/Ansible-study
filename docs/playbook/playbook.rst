@@ -10,6 +10,7 @@
 | ● :ref:`playbook-no-sakusei`
 | ● :ref:`playbook-no-jikko`
 | ● :ref:`jikko-kekka-no-kakunin`
+| ● :ref:`playbook-no-enshu`
 
 ----
 
@@ -26,3 +27,7 @@
 ----
 
 .. include:: ./jikko-kekka-no-kakunin.txt
+
+----
+
+.. include:: ./playbook-no-enshu.txt

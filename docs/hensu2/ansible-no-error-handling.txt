@@ -1,0 +1,11 @@
+.. _ansible-no-error-handling:
+
+Ansible のエラーハンドリング
+==================================================
+Ansible は次のいずれかの方法でエラーハンドリングします。
+
+- :ref:`error-wo-mushi-suru`
+- :ref:`error-tosite-atukau-jyoken`
+
+.. include:: ./error-wo-mushi-suru.txt
+.. include:: ./error-tosite-atukau-jyoken.txt

@@ -1,0 +1,72 @@
+.. _ansible-de-task-jikko-jini-error-ga-hasseisitatokino-dousa:
+
+Ansible でタスクの実行時にエラーが発生したときの動作
+====================================================================================================
+Ansible Documentation 内の「 `Modules That Are Useful for Testing <https://docs.ansible.com/ansible/latest/reference_appendices/test_strategies.html>`_ 」に次の一文があります。
+
+Ansible is a fail-fast system, so when there is an error creating that user, it will stop the playbook run. You do not have to check up behind it.
+
+Google 翻訳の結果です。
+
+「 Ansible はフェイルファストシステムであるため、そのユーザーの作成中にエラーが発生すると、プレイブックの実行が停止します。 背後でチェックする必要はありません。」
+
+少し補足して言い直すと次のようになります。
+
+- ある管理対象ホストでタスクでエラーが発生したら、その管理対象ホストはエラーが発生したタスクで終了です。
+- エラーが発生したタスク以降のタスク（＝　後続のタスク）は実行しません。
+
+プレイの実行して動作を確認します。 ``tasks`` セクション内に task-1 、task-2 、task-3 の 3 つのタスクがあります。タスク "task-2" は管理対象ホスト node2 だけにエラーが発生し、他の管理対象ホストは実行をスキップします。
+
+.. code-block:: none
+
+   - name: task error play
+     hosts: all
+     gather_facts: no
+   
+     tasks:
+     - name: task-1
+       debug:
+     - name: task-2
+       command: /bin/false
+       when: inventory_hostname == "node2"
+     - name: task-3
+       debug:
+
+実行結果です。管理対象ホスト node2 はタスク "task-2" でにエラーが発生したため、このタスクで終了です。タスク "task-3" は実行しません。 node2 以外の管理対象ホストは task-3 まで実行します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml task-error.yml 
+   
+   PLAY [task error play] **************************************************************************************************************************************
+   
+   TASK [task-1] ***********************************************************************************************************************************************
+   ok: [node1] => {
+       "msg": "Hello world!"
+   }
+   ok: [node3] => {
+       "msg": "Hello world!"
+   }
+   ok: [node2] => {
+       "msg": "Hello world!"
+   }
+   
+   TASK [task-2] ***********************************************************************************************************************************************
+   skipping: [node3]
+   skipping: [node1]
+   fatal: [node2]: FAILED! => {"ansible_facts": {"discovered_interpreter_python": "/usr/bin/python"}, "changed": true, "cmd": ["/bin/false"], "delta": "0:00:00.005796", "end": "2020-05-09 22:03:45.298726", "msg": "non-zero return code", "rc": 1, "start": "2020-05-09 22:03:45.292930", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+   
+   TASK [task-3] ***********************************************************************************************************************************************
+   ok: [node1] => {
+       "msg": "Hello world!"
+   }
+   ok: [node3] => {
+       "msg": "Hello world!"
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   node2                      : ok=1    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+   node3                      : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 

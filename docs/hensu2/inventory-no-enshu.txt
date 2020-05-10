@@ -1,0 +1,60 @@
+.. _inventory-no-enshu:
+
+インベントリの演習
+==================================================
+1. インベントリに関するファイルを編集してください。
+
+- :file:`node1.yml` ファイルから変数 stage の行を削除
+- :file:`all.yml` ファイルの末尾に削除した行を追加
+
+2. ``ansible-inventory`` コマンドを実行し、 all グループと web グループのどちらの変数の値が優先されるのか確認してください。
+
+.. _inventory-no-enshu-no-kaito-rei:
+
+解答
+--------------------------------------------------
+編集後の :file:`host_vars/node1.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   ansible_host: 192.168.1.161
+   ansible_ssh_private_key_file: ~/.ssh/node1_key
+
+編集後の :file:`group_vars/all.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   ansible_user: vagrant
+   stage: prod
+
+``ansible-inventory`` コマンドの実行結果です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-inventory -i hosts.yml --list --yaml
+   all:
+     children:
+       ungrouped:
+         hosts:
+           node1:
+             ansible_host: 192.168.1.161
+             ansible_ssh_private_key_file: ~/.ssh/node1_key
+             ansible_user: vagrant
+             stage: prod
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+             ansible_user: vagrant
+             stage: dev
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+             ansible_user: vagrant
+             stage: dev
+   [vagrant@ansible ansible-files]$ 
+
+:file:`group_vars/all.yml` ファイルの内容がすべてのグループ内の管理対象ホストに適用されてから :file:`group_vars/web.yml` ファイルの内容が適用されました。この結果から同じ変数が複数のグループで定義されている場合、all グループよりも個別のグループ（今回は web グループ）の定義が優先されます。

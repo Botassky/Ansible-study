@@ -41,7 +41,7 @@
      become: yes
      gather_facts: no
 
-.. fact-hensu-no-sansho-hoho:
+.. _fact-hensu-no-sansho-hoho:
 
 ファクト変数の参照方法
 --------------------------------------------------

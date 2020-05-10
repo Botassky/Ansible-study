@@ -1,0 +1,85 @@
+.. _host_vars-directory:
+
+host_vars ディレクトリ
+==================================================
+host_vars ディレクトリを作成します
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ mkdir host_vars/
+   [vagrant@ansible ansible-files]$ 
+
+インベントリからグループに関する部分を抽出（網掛け部分）します。
+
+.. code-block:: none
+   :emphasize-lines: 7-9, 16-17, 19-20
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+         stage: prod
+     children:
+       web:
+         vars:
+           stage: dev
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+
+ホスト名がファイル名になるので、各管理対象ホストのファイル名は次のとおりです。
+
+- node1.yml
+- node2.yml
+- node3.yml
+
+:file:`host_vars/node1.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   ansible_host: 192.168.1.161
+   ansible_ssh_private_key_file: ~/.ssh/node1_key
+   stage: prod
+
+:file:`host_vars/node2.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   ansible_host: 192.168.1.162
+   ansible_ssh_private_key_file: ~/.ssh/node2_key
+
+:file:`host_vars/node3.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   ansible_host: 192.168.1.163
+   ansible_ssh_private_key_file: ~/.ssh/node3_key
+
+インベントリファイル :file:`hosts.yml` から各管理対象ホストの部分を切り出したあとの状態です。
+
+.. code-block:: none
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+     children:
+       web:
+         vars:
+           stage: dev
+         hosts:
+           node2:
+           node3:

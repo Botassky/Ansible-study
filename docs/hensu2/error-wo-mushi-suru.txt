@@ -1,0 +1,96 @@
+.. _error-wo-mushi-suru:
+
+エラーを無視する
+--------------------------------------------------
+タスクに ``ignore_errors`` ディレクティブを指定すると、タスクでエラーが発生してもそのエラーを無視します。
+
+``/bin/false`` コマンドを実行するタスクに ``ignore_errors`` ディレクティブと ``register`` ディレクティブを指定して実行します。
+
+.. code-block:: none
+
+   - name: task error play
+     hosts: all
+     gather_facts: no
+   
+     tasks:
+     - name: task-1
+       debug:
+     - name: task-2
+       command: /bin/false
+       ignore_errors: yes
+       register: result
+       when: inventory_hostname == "node2"
+     - name: task-3
+       debug:
+         var: result
+
+実行結果です。管理対象ホスト node2 がタスク "task-2" の実行時エラーを無視したので **...ignoring** が表示されました。エラーを無視したので node2 もタスク "task-3" を実行しています。
+
+タスク "task-3" は "task-2" の実行結果の表示です。 node2 に **"failed": true,**  や **"rc": 1,** の表示があり、エラーが発生したことがわかります。RECAP に **ignored=1**  の表示があり、ここでもエラーを無視したことがわかります。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml task-error.yml 
+   
+   PLAY [task error play] **************************************************************************************************************************************
+   
+   TASK [task-1] ***********************************************************************************************************************************************
+   ok: [node1] => {
+       "msg": "Hello world!"
+   }
+   ok: [node3] => {
+       "msg": "Hello world!"
+   }
+   ok: [node2] => {
+       "msg": "Hello world!"
+   }
+   
+   TASK [task-2] ***********************************************************************************************************************************************
+   skipping: [node1]
+   skipping: [node3]
+   fatal: [node2]: FAILED! => {"ansible_facts": {"discovered_interpreter_python": "/usr/bin/python"}, "changed": true, "cmd": ["/bin/false"], "delta": "0:00:00.005399", "end": "2020-05-09 23:40:32.337710", "msg": "non-zero return code", "rc": 1, "start": "2020-05-09 23:40:32.332311", "stderr": "", "stderr_lines": [], "stdout": "", "stdout_lines": []}
+   ...ignoring
+   
+   TASK [task-3] ***********************************************************************************************************************************************
+   ok: [node1] => {
+       "result": {
+           "changed": false, 
+           "skip_reason": "Conditional result was False", 
+           "skipped": true
+       }
+   }
+   ok: [node3] => {
+       "result": {
+           "changed": false, 
+           "skip_reason": "Conditional result was False", 
+           "skipped": true
+       }
+   }
+   ok: [node2] => {
+       "result": {
+           "ansible_facts": {
+               "discovered_interpreter_python": "/usr/bin/python"
+           }, 
+           "changed": true, 
+           "cmd": [
+               "/bin/false"
+           ], 
+           "delta": "0:00:00.005399", 
+           "end": "2020-05-09 23:40:32.337710", 
+           "failed": true, 
+           "msg": "non-zero return code", 
+           "rc": 1, 
+           "start": "2020-05-09 23:40:32.332311", 
+           "stderr": "", 
+           "stderr_lines": [], 
+           "stdout": "", 
+           "stdout_lines": []
+       }
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   node2                      : ok=3    changed=1    unreachable=0    failed=0    skipped=0    rescued=0    ignored=1   
+   node3                      : ok=2    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 

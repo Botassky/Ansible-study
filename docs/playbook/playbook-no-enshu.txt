@@ -1,0 +1,39 @@
+.. _playbook-no-enshu:
+
+プレイブックの演習
+==================================================
+1. すべての管理対象ホストに対してプレイが実行できるよう変更してください。
+
+.. hint::
+
+   targets セクションを変更します。
+
+2. 変更したプレイを実行し、ブラウザで動作を確認してください。
+
+.. _playbook-no-enshu-no-kaito-rei:
+
+解答
+--------------------------------------------------
+変更後のプレイの内容です。
+
+.. code-block:: none
+
+   ---
+   - name: Apache server installed
+     hosts: all
+     become: yes
+   
+     tasks:
+     - name: latest Apache version installed
+       yum:
+         name: httpd
+         state: latest
+     - name: Apache enabled and running
+       systemd:
+         name: httpd.service
+         state: started
+         enabled: yes
+     - name: copy index.html
+       template:
+         src: ~/ansible-files/index.j2
+         dest: /var/www/html/index.html

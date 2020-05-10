@@ -15,3 +15,4 @@ Ansible ワークブック
    jyoken-bunki-handler-loop/jyoken-bunki-handler-loop
    template/template
    role/role
+   hensu2/hensu2

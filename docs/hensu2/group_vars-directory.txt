@@ -1,0 +1,76 @@
+.. _group_vars-directory:
+
+group_vars ディレクトリ
+==================================================
+group_vars ディレクトリを作成します
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ mkdir group_vars/
+   [vagrant@ansible ansible-files]$
+
+インベントリからグループに関する部分を抽出（網掛け部分）します。
+
+.. code-block:: none
+   :emphasize-lines: 3-4, 12-13
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+         stage: prod
+     children:
+       web:
+         vars:
+           stage: dev
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+
+最初は all グループ、 2 つめは web グループに関する部分なので、ファイル名は次のとおりです。
+
+- all.yml
+- web.yml
+
+:file:`group_vars/all.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   ansible_user: vagrant
+
+:file:`group_vars/web.yml` ファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   stage: dev
+
+インベントリファイル :file:`hosts.yml` からグループの部分を切り出したあとの状態です。
+
+.. code-block:: none
+
+   ---
+   all:
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+         stage: prod
+     children:
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key

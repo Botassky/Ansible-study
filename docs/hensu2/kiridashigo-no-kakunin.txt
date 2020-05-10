@@ -1,0 +1,70 @@
+.. _kiridashigo-no-kakunin:
+
+インベントリの切り出し後の確認
+==================================================
+インベントリからグループ固有の部分を :ref:`group_vars-directory` に、管理対象ホスト固有の部分を :ref:`host_vars-directory` に切り出した後の :file:`hosts.yml` ファイルの状態です。
+
+.. code-block:: none
+
+   ---
+   all:
+     hosts:
+       node1:
+     children:
+       web:
+         hosts:
+           node2:
+           node3:
+
+グループ構成と管理対象ホストだけのスッキリした状態です。ディレクトリとファイルの配置状況です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ tree
+   .
+   ├── group_vars
+   │   ├── all.yml
+   │   └── web.yml
+   ├── hosts.yml
+   └── host_vars
+       ├── node1.yml
+       ├── node2.yml
+       └── node3.yml
+   
+   2 directories, 6 files
+   [vagrant@ansible ansible-files]$ 
+
+``ansible-inventory`` コマンドを実行し、各ファイルに切り出す前と同じか確認しました。同じ結果になっています。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible-inventory -i hosts.yml --list --yaml
+   all:
+     children:
+       ungrouped:
+         hosts:
+           node1:
+             ansible_host: 192.168.1.161
+             ansible_ssh_private_key_file: ~/.ssh/node1_key
+             ansible_user: vagrant
+             stage: prod
+       web:
+         hosts:
+           node2:
+             ansible_host: 192.168.1.162
+             ansible_ssh_private_key_file: ~/.ssh/node2_key
+             ansible_user: vagrant
+             stage: dev
+           node3:
+             ansible_host: 192.168.1.163
+             ansible_ssh_private_key_file: ~/.ssh/node3_key
+             ansible_user: vagrant
+             stage: dev
+   [vagrant@ansible ansible-files]$ ansible-inventory -i hosts.yml --graph
+   @all:
+     |--@ungrouped:
+     |  |--node1
+     |--@web:
+     |  |--node2
+     |  |--node3
+   [vagrant@ansible ansible-files]$ 

@@ -1,0 +1,72 @@
+.. _hensu-no-enshu:
+
+変数の演習
+==================================================
+1. 管理対象ホスト node1 のホスト名と OS のバージョンを持つファクト変数を見つけてください。
+
+  .. hint::
+
+     - ホスト名　→　hostname
+     - OS のバージョン　→　distribution_version
+
+2. アドホックコマンドで node1 のホスト名とバージョンを確認してください。
+
+   .. hint::
+
+      - ホスト名　→　:command:`hostname` コマンド
+      - OS のバージョン　→　:file:`/etc/redhat-release` ファイルの内容を確認
+
+3. ファクト変数を使用して管理対象ホスト node1 のホスト名と OS のバージョンを表示するプレイを作成してください。
+
+   .. hint::
+
+      プレイ内でファクト変数の使用する方法は「 :ref:`fact-hensu-no-sansho-hoho` 」を参照してください。
+
+4. 作成したプレイを実行し、実際に管理対象ホスト node1 のホスト名と OS のバージョンを確認してください。
+
+      
+.. _hensu-no-enshu-no-kaito-rei:
+
+解答
+--------------------------------------------------
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m setup | grep -i hostname
+           "ansible_hostname": "node1", 
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m setup | grep -i distribution_version
+           "ansible_distribution_version": "7.8", 
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m command -a hostname
+   node1 | CHANGED | rc=0 >>
+   node1
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m command -a 'cat /etc/redhat-release'
+   node1 | CHANGED | rc=0 >>
+   CentOS Linux release 7.8.2003 (Core)
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ vim show-info.yml
+   [vagrant@ansible ansible-files]$ cat show-info.yml 
+   - name: show node1 information
+     hosts: node1
+   
+     tasks:
+     - name: show information
+       debug:
+         msg: "管理対象ホスト {{ ansible_facts['hostname'] }} の OS のバージョンは {{ ansible_facts['distribution_version'] }} です。"
+   
+   [vagrant@ansible ansible-files]$ 
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml show-info.yml 
+   
+   PLAY [show node1 information] *******************************************************************************************************************************
+   
+   TASK [Gathering Facts] **************************************************************************************************************************************
+   ok: [node1]
+   
+   TASK [show information] *************************************************************************************************************************************
+   ok: [node1] => {
+       "msg": "管理対象ホスト node1 の OS のバージョンは 7.8 です。"
+   }
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=0    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 

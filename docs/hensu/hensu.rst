@@ -11,6 +11,7 @@ Ansible はプレイ内で値を格納するための変数をサポートして
 | ● :ref:`hensu-no-tsukaikata`
 | ● :ref:`magic-hensu`
 | ● :ref:`fact-hensu`
+| ● :ref:`hensu-no-enshu`
 
 ----
 
@@ -23,3 +24,7 @@ Ansible はプレイ内で値を格納するための変数をサポートして
 ----
 
 .. include:: ./fact-hensu.txt
+
+----
+
+.. include:: ./hensu-no-enshu.txt

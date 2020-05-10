@@ -1,0 +1,35 @@
+.. _error-handling-toha:
+
+エラーハンドリング
+==================================================
+「エラーハンドリング」とは発生したエラーに対処することです。 Ansible は fail-fast システムなので、エラーが発生したらそこで実行は終了です。べき等性を保つ観点から、多くの場合はこれで問題ありません。しかし、 ``command`` モジュールや ``shell`` モジュールを使用して Linux コマンドを実行するとき、これでは問題が発生することがあります。
+
+Linux コマンドを実行すると、必ず戻り値が設定されます。具体的には次の値が設定されます。
+
+- コマンドが正常終了したとき　→　0 が設定されます
+- コマンドが異常終了（エラーが発生した）とき　→　0 以外が設定されます
+
+上述のプレイで使用した ``/bin/false`` コマンドの戻り値を確認します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ /bin/false
+   [vagrant@ansible ansible-files]$ echo $?
+   1
+   [vagrant@ansible ansible-files]$ 
+
+``ls`` コマンドの戻り値を確認します。ファイルが存在したときの戻り値は 0 、ファイルが存在しないときの戻り値は 2 です。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ls hosts.yml
+   hosts.yml
+   [vagrant@ansible ansible-files]$ echo $?
+   0
+   [vagrant@ansible ansible-files]$ ls abc
+   ls: cannot access abc: No such file or directory
+   [vagrant@ansible ansible-files]$ echo $?
+   2
+   [vagrant@ansible ansible-files]$ 
+
+``command`` モジュールや ``shell`` モジュールを使用して Linux コマンドを実行したときの戻り値が 0 以外の場合、Ansible はタスクの実行が失敗したと判断し fatal として処理します。これが上述のプレイでエラーが発生した理由です。

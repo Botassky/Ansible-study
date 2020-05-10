@@ -35,6 +35,30 @@
    -rw-rw-r--. 1 vagrant vagrant 414 Apr 19 15:30 hosts.yml
    [vagrant@ansible ansible-files]$
 
+移動したインベントリファイルの内容です。
+
+.. code-block:: none
+
+   ---
+   all:
+     vars:
+       ansible_user: vagrant
+     hosts:
+       node1:
+         ansible_host: 192.168.1.161
+         ansible_ssh_private_key_file: ~/.ssh/node1_key
+       node2:
+         ansible_host: 192.168.1.162
+         ansible_ssh_private_key_file: ~/.ssh/node2_key
+       node3:
+           ansible_host: 192.168.1.163
+           ansible_ssh_private_key_file: ~/.ssh/node3_key
+     children:
+       web:
+         hosts:
+           node2:
+           node3:
+
 .. _playbook-no-sakusei-targets-section:
 
 targets セクション
@@ -52,7 +76,7 @@ vi コマンドなどで :file:`apache.yml` ファイルを作成し、プレイ
 | 1 行目
 | ・プレイの開始です。
 | 2 行目
-| ・このプレイの名前を Apache server installed に設定しました。 
+| ・このプレイの名前を "Apache server installed" に設定しました。 
 | 3 行目
 | ・管理対象をホストパターンで指定します。
 | ・今回は管理対象に web グループを指定しました。
@@ -81,7 +105,7 @@ tasks セクション
 | 1 行目
 | ・ tasks セクションの開始です。
 | 2 行目
-| ・ このタスクの名前を latest Apache version installed に設定しました。
+| ・ このタスクの名前を "latest Apache version installed" に設定しました。
 | 3 行目
 | ・ タスクで使用するモジュールの宣言です。
 | ・ Apache のパッケージをインストールするので ``yum`` モジュールを使用します。
