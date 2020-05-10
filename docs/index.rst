@@ -16,3 +16,4 @@ Ansible ワークブック
    template/template
    role/role
    hensu2/hensu2
+   changelog/changelog

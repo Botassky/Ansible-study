@@ -10,6 +10,7 @@
 | ● :ref:`ansible-no-error-handling`
 | 　・ :ref:`error-wo-mushi-suru`
 | 　・ :ref:`error-tosite-atukau-jyoken`
+| ● :ref:`error-handling-enshu`
 
 ----
 
@@ -26,3 +27,7 @@
 ----
 
 .. include:: ./ansible-no-error-handling.txt
+
+----
+
+.. include:: ./error-handling-enshu.txt

@@ -1,0 +1,112 @@
+.. _error-handling-enshu:
+
+エラーハンドリングの演習
+==================================================
+管理対象ホスト node1 にアカウントを追加します。ただし、 :file:`/etc/passwd` に登録済みのアカウントは追加や更新してはいけません。登録済みのときはエラーで処理を中断します。
+
+1. アドホックコマンドで :file:`/etc/passwd` にアカウントが登録されているとき、登録されていないときの戻り値を確認します。
+
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m shell -a 'cat /etc/passwd | grep vagrant'
+   node1 | CHANGED | rc=0 >>
+   vagrant:x:1000:1000:vagrant:/home/vagrant:/bin/bash
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m shell -a 'cat /etc/passwd | grep hogehoge'
+   node1 | FAILED | rc=1 >>
+   non-zero return code
+   [vagrant@ansible ansible-files]$ 
+
+.. tip::
+
+   パイプやリダイレクトなどを使用するときは ``shell`` モジュールを使用します。 ``command`` モジュールはパイプなどを処理できません。
+
+2. （ざっくりとした）処理を考えます。
+
+- :file:`/etc/passwd` ファイルに登録したいアカウントが登録されているかどうか確認
+
+   - ``shell`` モジュール
+   - ``register`` ディレクティブ
+   - ``failed_when`` ディレクティブ
+
+- アカウントを登録
+
+   - ``user`` モジュール
+   - ``become`` ディレクティブ（ ``targets`` セクションで定義していたらタスクでの指定は不要）
+
+3. プレイを作成・実行します。
+
+4. アドホックコマンドで管理対象ホスト node1 の :file:`/etc/passwd` ファイルの内容を参照し、アカウントが登録されていることを確認します。
+
+5. 登録済みアカウントに変更し、エラーで処理を中断することを確認します。
+
+.. _error-handling-enshu-no-kaito-rei:
+
+解答
+--------------------------------------------------
+.. code-block:: none
+
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m shell -a 'cat /etc/passwd | grep vagrant'
+   node1 | CHANGED | rc=0 >>
+   vagrant:x:1000:1000:vagrant:/home/vagrant:/bin/bash
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m shell -a 'cat /etc/passwd | grep hogehoge'
+   node1 | FAILED | rc=1 >>
+   non-zero return code
+   [vagrant@ansible ansible-files]$ vim useradd.yml
+   [vagrant@ansible ansible-files]$ cat useradd.yml 
+   - name: アカウントを登録する
+     hosts: node1
+     gather_facts: no
+   
+     tasks:
+     - name: アカウントが登録されているか確認
+       shell: 'cat /etc/passwd | grep hogehoge' 
+       register: result
+       failed_when: result['rc'] != 1
+     - name: アカウント登録
+       user:
+         name: "hogehoge"
+         state: present
+       become: yes
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml useradd.yml 
+   
+   PLAY [アカウントを登録する] *******************************************************************************************************************************************
+   
+   TASK [アカウントが登録されているか確認] *************************************************************************************************************************************
+   changed: [node1]
+   
+   TASK [アカウント登録] **********************************************************************************************************************************************
+   changed: [node1]
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=2    changed=2    unreachable=0    failed=0    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ ansible node1 -i hosts.yml -m shell -a 'cat /etc/passwd | grep hogehoge'
+   node1 | CHANGED | rc=0 >>
+   hogehoge:x:1001:1001::/home/hogehoge:/bin/bash
+   [vagrant@ansible ansible-files]$ vim useradd.yml
+   [vagrant@ansible ansible-files]$ cat useradd.yml 
+   - name: アカウントを登録する
+     hosts: node1
+     gather_facts: no
+   
+     tasks:
+     - name: アカウントが登録されているか確認
+       shell: 'cat /etc/passwd | grep vagrant' 
+       register: result
+       failed_when: result['rc'] != 1
+     - name: アカウント登録
+       user:
+         name: "vagrant"
+         state: present
+       become: yes
+   [vagrant@ansible ansible-files]$ ansible-playbook -i hosts.yml useradd.yml 
+   
+   PLAY [アカウントを登録する] *******************************************************************************************************************************************
+   
+   TASK [アカウントが登録されているか確認] *************************************************************************************************************************************
+   fatal: [node1]: FAILED! => {"ansible_facts": {"discovered_interpreter_python": "/usr/bin/python"}, "changed": true, "cmd": "cat /etc/passwd | grep vagrant", "delta": "0:00:00.009987", "end": "2020-05-10 14:45:01.615450", "failed_when_result": true, "rc": 0, "start": "2020-05-10 14:45:01.605463", "stderr": "", "stderr_lines": [], "stdout": "vagrant:x:1000:1000:vagrant:/home/vagrant:/bin/bash", "stdout_lines": ["vagrant:x:1000:1000:vagrant:/home/vagrant:/bin/bash"]}
+   
+   PLAY RECAP **************************************************************************************************************************************************
+   node1                      : ok=0    changed=0    unreachable=0    failed=1    skipped=0    rescued=0    ignored=0   
+   
+   [vagrant@ansible ansible-files]$ 
