@@ -1,7 +1,7 @@
 .. _template-file-no-sakusei:
 
 テンプレートファイルの作成
---------------------------------------------------
+==================================================
 :file:`templates` ディレクトリ内に管理対象ホストにコピーするテンプレートファイル（ index.html ）を作成します。
 
 .. list-table::
@@ -32,7 +32,7 @@
    [vagrant@ansible ansible-files]$ 
 
 roles/apache/templates/default-index.j2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------------
 .. code-block:: none
 
    <html>
@@ -42,7 +42,7 @@ roles/apache/templates/default-index.j2
    </html>
 
 roles/apache/templates/virtual-index.j2
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--------------------------------------------------
 .. code-block:: none
 
    <html>

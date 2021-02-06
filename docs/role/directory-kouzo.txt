@@ -1,7 +1,8 @@
 .. _directory-kouzo:
 
+**************************************************
 ディレクトリ構造
-==================================================
+**************************************************
 ロールは :file:`roles/` ディレクトリ内に配置します。以下は `Ansible の Best Practices で提示されているディレクトリレイアウト <https://docs.ansible.com/ansible/latest/user_guide/playbooks_best_practices.html#directory-layout>`_ です。網掛けがロールに関する部分です。
 
 .. code-block:: none

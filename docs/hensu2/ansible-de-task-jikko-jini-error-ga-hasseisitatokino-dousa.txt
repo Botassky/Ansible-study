@@ -1,7 +1,8 @@
 .. _ansible-de-task-jikko-jini-error-ga-hasseisitatokino-dousa:
 
+****************************************************************************************************
 Ansible でタスクの実行時にエラーが発生したときの動作
-====================================================================================================
+****************************************************************************************************
 Ansible Documentation 内の「 `Modules That Are Useful for Testing <https://docs.ansible.com/ansible/latest/reference_appendices/test_strategies.html>`_ 」に次の一文があります。
 
 Ansible is a fail-fast system, so when there is an error creating that user, it will stop the playbook run. You do not have to check up behind it.
